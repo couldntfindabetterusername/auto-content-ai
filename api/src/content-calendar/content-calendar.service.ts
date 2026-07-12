@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import { CreateCalendarDto } from './dto/create-calendar.dto';
 import { QueueService } from '../queue/queue.service';
 import {
@@ -108,6 +108,49 @@ export class ContentCalendarService {
       qualityScore: calendar.content_calendars.quality_score,
       createdAt: calendar.content_calendars.created_at,
       videoConcepts: conceptsWithDetails,
+    };
+  }
+
+  async listCalendars(userId: string, page: number, pageSize: number) {
+    const offset = (page - 1) * pageSize;
+
+    const rows = await this.db
+      .select({
+        id: contentCalendarJobs.id,
+        channelUrl: contentCalendarJobs.channel_url,
+        niche: contentCalendarJobs.niche,
+        status: contentCalendarJobs.status,
+        progressPercent: contentCalendarJobs.progress_percent,
+        createdAt: contentCalendarJobs.created_at,
+        calendarId: contentCalendars.id,
+        qaScore: contentCalendars.quality_score,
+        total: sql<number>`count(*) OVER()::int`,
+      })
+      .from(contentCalendarJobs)
+      .leftJoin(contentCalendars, eq(contentCalendars.job_id, contentCalendarJobs.id))
+      .where(eq(contentCalendarJobs.user_id, userId))
+      .orderBy(desc(contentCalendarJobs.created_at))
+      .limit(pageSize)
+      .offset(offset);
+
+    return {
+      items: rows.map((r: any) => ({
+        id: r.id,
+        calendarId: r.calendarId,
+        channelUrl: r.channelUrl,
+        niche: r.niche,
+        status: r.status,
+        progressPercent: r.progressPercent,
+        createdAt: r.createdAt,
+        qaScore: r.qaScore,
+      })),
+      total: rows[0]?.total ?? await this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(contentCalendarJobs)
+        .where(eq(contentCalendarJobs.user_id, userId))
+        .then(([r]: any[]) => r?.count ?? 0),
+      page,
+      pageSize,
     };
   }
 

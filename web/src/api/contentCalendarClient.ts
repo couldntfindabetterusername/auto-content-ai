@@ -1,5 +1,40 @@
 import type { CalendarResponse, CreateCalendarRequest, CreateCalendarResponse } from '../types/calendar';
 
+export interface CalendarHistoryItem {
+  id: string;
+  calendarId: string | null;
+  channelUrl: string;
+  niche: string;
+  status: string;
+  progressPercent: number | null;
+  createdAt: string;
+  qaScore: string | null;
+}
+
+export interface CalendarHistoryResponse {
+  items: CalendarHistoryItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export async function listCalendars(
+  page = 1,
+  pageSize = 20,
+): Promise<CalendarHistoryResponse> {
+  const res = await fetch(
+    `/api/content-calendars?page=${page}&pageSize=${pageSize}`,
+    { credentials: 'include' },
+  );
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message || `Request failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
 export async function createContentCalendar(
   request: CreateCalendarRequest,
 ): Promise<CreateCalendarResponse> {

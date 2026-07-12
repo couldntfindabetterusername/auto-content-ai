@@ -4,6 +4,7 @@ import { LandingPage } from './pages/LandingPage';
 import { JobProgressPage } from './pages/JobProgressPage';
 import { NewCalendarPage } from './pages/NewCalendarPage';
 import { CalendarResultPage } from './pages/CalendarResultPage';
+import { CalendarHistoryPage } from './pages/CalendarHistoryPage';
 import { useAuth } from './hooks/useAuth';
 
 function ProtectedRoute() {
@@ -49,7 +50,7 @@ export const router = createBrowserRouter([
           },
           {
             path: '/history',
-            element: <div className="p-8 text-center text-gray-500">History page — coming soon</div>,
+            element: <CalendarHistoryPage />,
           },
         ],
       },

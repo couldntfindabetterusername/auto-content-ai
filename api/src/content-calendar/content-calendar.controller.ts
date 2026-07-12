@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Header, HttpCode, Param, ParseUUIDPipe, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Header, HttpCode, Param, ParseUUIDPipe, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ContentCalendarService } from './content-calendar.service';
 import { CreateCalendarDto } from './dto/create-calendar.dto';
@@ -15,6 +15,23 @@ export class ContentCalendarController {
     private readonly regenerationService: RegenerationService,
     private readonly pdfRenderer: PdfRenderer,
   ) {}
+
+  @Get('/')
+  @UseGuards(AuthGuard)
+  async listCalendars(
+    @Req() req: Request,
+    @Query('page') page = '1',
+    @Query('pageSize') pageSize = '20',
+  ) {
+    const user = req.user as { id: string };
+    const parsedPage = parseInt(page, 10);
+    const parsedSize = parseInt(pageSize, 10);
+    return this.contentCalendarService.listCalendars(
+      user.id,
+      Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1,
+      Number.isFinite(parsedSize) ? Math.min(100, Math.max(1, parsedSize)) : 20,
+    );
+  }
 
   @Post('/')
   @UseGuards(AuthGuard, QuotaGuard)
