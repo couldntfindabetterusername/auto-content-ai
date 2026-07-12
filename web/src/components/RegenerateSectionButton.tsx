@@ -6,7 +6,7 @@ interface Props {
   calendarId: string | null;
   videoIndex: number;
   section: Section;
-  onSuccess: () => void;
+  onSuccess: () => Promise<void>;
 }
 
 export function RegenerateSectionButton({ calendarId, videoIndex, section, onSuccess }: Props) {
@@ -18,7 +18,6 @@ export function RegenerateSectionButton({ calendarId, videoIndex, section, onSuc
   async function handleClick() {
     setLoading(true);
     setError(null);
-    let succeeded = false;
     try {
       const res = await fetch(`/api/content-calendars/${calendarId}/regenerate-section`, {
         method: 'POST',
@@ -30,13 +29,12 @@ export function RegenerateSectionButton({ calendarId, videoIndex, section, onSuc
         const body = await res.json().catch(() => ({}));
         throw new Error((body as { message?: string })?.message || `Failed: ${res.status}`);
       }
-      succeeded = true;
+      await onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Regeneration failed');
     } finally {
       setLoading(false);
     }
-    if (succeeded) onSuccess();
   }
 
   return (
