@@ -2,8 +2,9 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { google, youtube_v3 } from 'googleapis';
 import Redis from 'ioredis';
+import { createHash } from 'crypto';
 import { parseChannelInput, ChannelNotFoundError } from './youtube.utils';
-import { Video } from './youtube.types';
+import { Video, SearchVideo } from './youtube.types';
 
 export interface Channel {
   id: string;
@@ -16,6 +17,8 @@ export interface Channel {
 
 const CACHE_TTL_SECONDS = 24 * 60 * 60;
 const VIDEO_CACHE_TTL_SECONDS = 6 * 60 * 60;
+const SEARCH_CACHE_TTL_SECONDS = 12 * 60 * 60;
+const SEARCH_MAX_RESULTS = 10;
 
 function parseIsoDuration(iso: string): number {
   const match = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(iso);
@@ -149,6 +152,74 @@ export class YoutubeService implements OnModuleInit {
 
     await this.redis.set(cacheKey, JSON.stringify(videos), 'EX', VIDEO_CACHE_TTL_SECONDS);
     return videos;
+  }
+
+  async searchNicheTrends(niche: string): Promise<SearchVideo[]> {
+    const query = niche.trim();
+    if (query.length === 0) return [];
+
+    const queryHash = createHash('sha256').update(query.toLowerCase()).digest('hex').slice(0, 16);
+    const today = new Date().toISOString().slice(0, 10);
+    const cacheKey = `yt:search:${queryHash}:${today}`;
+
+    const cached = await this.redis.get(cacheKey);
+    if (cached) return JSON.parse(cached) as SearchVideo[];
+
+    const [byViews, byDate] = await Promise.all([
+      this.searchVideoIds(query, 'viewCount'),
+      this.searchVideoIds(query, 'date'),
+    ]);
+
+    // Merge both result sets, dropping duplicate video IDs.
+    const videoIds = [...new Set([...byViews, ...byDate])];
+    if (videoIds.length === 0) return [];
+
+    const videosRes = await this.yt.videos.list({
+      part: ['snippet', 'statistics'],
+      id: videoIds,
+    });
+
+    const now = Date.now();
+    const results: SearchVideo[] = (videosRes.data.items ?? [])
+      .map((item): SearchVideo | null => {
+        if (!item.id || !item.snippet) return null;
+        const publishedAt = item.snippet.publishedAt ?? '';
+        const viewCount = parseInt(item.statistics?.viewCount ?? '0', 10);
+        const ageDays = Math.max(
+          1,
+          (now - new Date(publishedAt).getTime()) / (24 * 60 * 60 * 1000),
+        );
+        return {
+          id: item.id,
+          title: item.snippet.title ?? '',
+          channelTitle: item.snippet.channelTitle ?? '',
+          viewCount,
+          publishedAt,
+          viewVelocity: Math.round(viewCount / ageDays),
+        };
+      })
+      .filter((v): v is SearchVideo => v !== null)
+      .sort((a, b) => b.viewCount - a.viewCount);
+
+    await this.redis.set(cacheKey, JSON.stringify(results), 'EX', SEARCH_CACHE_TTL_SECONDS);
+    return results;
+  }
+
+  private async searchVideoIds(
+    query: string,
+    order: 'viewCount' | 'date',
+  ): Promise<string[]> {
+    const res = await this.yt.search.list({
+      part: ['id'],
+      q: query,
+      type: ['video'],
+      order,
+      maxResults: SEARCH_MAX_RESULTS,
+    });
+
+    return (res.data.items ?? [])
+      .map((i) => i.id?.videoId)
+      .filter((id): id is string => Boolean(id));
   }
 
   private async extractChannel(

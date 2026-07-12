@@ -9,3 +9,13 @@ export interface Video {
   commentCount: number;
   tags: string[];
 }
+
+export interface SearchVideo {
+  id: string;
+  title: string;
+  channelTitle: string;
+  viewCount: number;
+  publishedAt: string;
+  /** Views per day since publish (>= 1 day floor). */
+  viewVelocity: number;
+}
