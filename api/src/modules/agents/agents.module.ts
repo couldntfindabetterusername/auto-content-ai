@@ -7,10 +7,11 @@ import { TrendScoutAgent } from './trend-scout.agent';
 import { TopicStrategistAgent } from './topic-strategist.agent';
 import { OutlineGeneratorAgent } from './outline-generator.agent';
 import { SeoOptimizerAgent } from './seo-optimizer.agent';
+import { FinalQaAgent } from './final-qa.agent';
 
 @Module({
   imports: [LlmModule, DbModule],
-  providers: [AgentRunnerService, ChannelAnalyzerAgent, TrendScoutAgent, TopicStrategistAgent, OutlineGeneratorAgent, SeoOptimizerAgent],
-  exports: [AgentRunnerService, ChannelAnalyzerAgent, TrendScoutAgent, TopicStrategistAgent, OutlineGeneratorAgent, SeoOptimizerAgent],
+  providers: [AgentRunnerService, ChannelAnalyzerAgent, TrendScoutAgent, TopicStrategistAgent, OutlineGeneratorAgent, SeoOptimizerAgent, FinalQaAgent],
+  exports: [AgentRunnerService, ChannelAnalyzerAgent, TrendScoutAgent, TopicStrategistAgent, OutlineGeneratorAgent, SeoOptimizerAgent, FinalQaAgent],
 })
 export class AgentsModule {}
