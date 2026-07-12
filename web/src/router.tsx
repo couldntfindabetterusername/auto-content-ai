@@ -5,6 +5,7 @@ import { JobProgressPage } from './pages/JobProgressPage';
 import { NewCalendarPage } from './pages/NewCalendarPage';
 import { CalendarResultPage } from './pages/CalendarResultPage';
 import { CalendarHistoryPage } from './pages/CalendarHistoryPage';
+import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { useAuth } from './hooks/useAuth';
 
 function ProtectedRoute() {
@@ -51,6 +52,10 @@ export const router = createBrowserRouter([
           {
             path: '/history',
             element: <CalendarHistoryPage />,
+          },
+          {
+            path: '/admin',
+            element: <AdminDashboardPage />,
           },
         ],
       },
