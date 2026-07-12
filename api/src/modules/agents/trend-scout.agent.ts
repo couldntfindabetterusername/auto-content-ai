@@ -41,7 +41,7 @@ type TrendScoutInput = z.infer<typeof TrendScoutInputSchema>;
 export class TrendScoutAgent extends BaseAgent<TrendScoutInput, TrendAnalysis> {
   readonly name = 'trend_scout';
   readonly modelClass: ModelClass = 'mid';
-  readonly promptName = 'trend_scout_v1';
+  readonly promptName = 'trend_scout';
   readonly promptVersion = 'v1';
   readonly inputSchema = TrendScoutInputSchema;
   readonly outputSchema = TrendAnalysisSchema;

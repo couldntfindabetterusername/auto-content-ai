@@ -49,7 +49,7 @@ type ChannelAnalyzerInput = z.infer<typeof ChannelAnalyzerInputSchema>;
 export class ChannelAnalyzerAgent extends BaseAgent<ChannelAnalyzerInput, ChannelAnalysis> {
   readonly name = 'channel_analyzer';
   readonly modelClass: ModelClass = 'mid';
-  readonly promptName = 'channel_analyzer_v1';
+  readonly promptName = 'channel_analyzer';
   readonly promptVersion = 'v1';
   readonly inputSchema = ChannelAnalyzerInputSchema;
   readonly outputSchema = ChannelAnalysisSchema;
