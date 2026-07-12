@@ -23,7 +23,7 @@ RUN printf '%s\n' \
     '    index index.html;' \
     '' \
     '    location ~* ^/api/jobs/[^/]+/events {' \
-    '        proxy_pass http://autocontent-api.internal:3000;' \
+    '        proxy_pass http://api:3000;' \
     '        proxy_http_version 1.1;' \
     '        proxy_set_header Connection "";' \
     '        proxy_set_header Host $host;' \
@@ -36,7 +36,7 @@ RUN printf '%s\n' \
     '    }' \
     '' \
     '    location /api {' \
-    '        proxy_pass http://autocontent-api.internal:3000;' \
+    '        proxy_pass http://api:3000;' \
     '        proxy_http_version 1.1;' \
     '        proxy_set_header Upgrade $http_upgrade;' \
     '        proxy_set_header Connection "upgrade";' \
