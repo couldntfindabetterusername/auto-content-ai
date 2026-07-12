@@ -23,112 +23,115 @@ import { FinalQaAgent } from '../modules/agents/final-qa.agent';
 import { ContentCalendarService } from '../modules/content-calendar/content-calendar.service';
 import { runPipeline } from './pipeline';
 
-const db = createDb();
+(async () => {
+  const db = await createDb();
 
-const publisher = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-});
+  const publisher = new Redis({
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379'),
+  });
 
-// Minimal ConfigService shim — lets services read from process.env
-const envConfig = {
-  getOrThrow: <T>(key: string): T => {
-    const v = process.env[key];
-    if (!v) throw new Error(`Missing env var: ${key}`);
-    return v as unknown as T;
-  },
-  get: <T>(key: string, defaultVal?: T): T =>
-    (process.env[key] as unknown as T) ?? defaultVal!,
-};
-
-const youtubeService = new YoutubeService(envConfig as any);
-youtubeService.onModuleInit();
-
-const metricsService = new MetricsService();
-const trendsService = new TrendsService(envConfig as any, db);
-trendsService.onModuleInit();
-
-const geminiProvider = new GeminiProvider(envConfig as any);
-const providerFactory = new LlmProviderFactory(geminiProvider);
-const llmService = new LlmService(envConfig as any, db, providerFactory);
-const promptLoader = new PromptLoader();
-
-const inputValidator = new InputValidator();
-const channelDataCollector = new ChannelDataCollector(youtubeService, metricsService);
-const trendDataCollector = new TrendDataCollector(youtubeService, trendsService);
-const channelAnalyzerAgent = new ChannelAnalyzerAgent(llmService, db, promptLoader);
-const trendScoutAgent = new TrendScoutAgent(llmService, db, promptLoader);
-const topicStrategistAgent = new TopicStrategistAgent(llmService, db, promptLoader);
-const outlineGeneratorAgent = new OutlineGeneratorAgent(llmService, db, promptLoader);
-const seoOptimizerAgent = new SeoOptimizerAgent(llmService, db, promptLoader);
-const finalQaAgent = new FinalQaAgent(llmService, db, promptLoader);
-const contentCalendarService = new ContentCalendarService(db);
-
-async function publishProgress(
-  jobId: string,
-  step: string,
-  status: 'running' | 'done' | 'failed',
-  error?: string,
-): Promise<void> {
-  try {
-    await publisher.publish(
-      `job:${jobId}:progress`,
-      JSON.stringify({
-        jobId,
-        agentName: step,
-        status,
-        agentRunId: '',
-        timestamp: new Date().toISOString(),
-        ...(error ? { error } : {}),
-      }),
-    );
-  } catch {
-    // non-fatal — never break execution for pub/sub failures
-  }
-}
-
-const worker = new Worker(
-  'content-calendar',
-  async (job) => {
-    const { jobId, channelUrl, niche, preferences } = job.data as {
-      jobId: string;
-      channelUrl: string;
-      niche: string;
-      preferences?: string;
-    };
-
-    await db
-      .update(contentCalendarJobs)
-      .set({ status: 'running', current_step: 'starting', started_at: new Date() })
-      .where(eq(contentCalendarJobs.id, jobId));
-
-    await runPipeline(
-      { jobId, channelUrl, niche, preferences },
-      {
-        db,
-        inputValidator,
-        channelDataCollector,
-        trendDataCollector,
-        channelAnalyzerAgent,
-        trendScoutAgent,
-        topicStrategistAgent,
-        outlineGeneratorAgent,
-        seoOptimizerAgent,
-        finalQaAgent,
-        contentCalendarService,
-      },
-      (step, status, error) => publishProgress(jobId, step, status, error),
-    );
-  },
-  {
-    connection: {
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
+  // Minimal ConfigService shim — lets services read from process.env
+  const envConfig = {
+    getOrThrow: <T>(key: string): T => {
+      const v = process.env[key];
+      if (!v) throw new Error(`Missing env var: ${key}`);
+      return v as unknown as T;
     },
-  },
-);
+    get: <T>(key: string, defaultVal?: T): T =>
+      (process.env[key] as unknown as T) ?? defaultVal!,
+  };
 
-worker.on('completed', (job) => console.log(`Job ${job.id} completed`));
-worker.on('failed', (job, err) => console.error(`Job ${job?.id} failed:`, err));
+  const youtubeService = new YoutubeService(envConfig as any);
+  youtubeService.onModuleInit();
 
-export default worker;
+  const metricsService = new MetricsService();
+  const trendsService = new TrendsService(envConfig as any, db);
+  trendsService.onModuleInit();
+
+  const geminiProvider = new GeminiProvider(envConfig as any);
+  const providerFactory = new LlmProviderFactory(geminiProvider);
+  const llmService = new LlmService(envConfig as any, db, providerFactory);
+  const promptLoader = new PromptLoader();
+
+  const inputValidator = new InputValidator();
+  const channelDataCollector = new ChannelDataCollector(youtubeService, metricsService);
+  const trendDataCollector = new TrendDataCollector(youtubeService, trendsService);
+  const channelAnalyzerAgent = new ChannelAnalyzerAgent(llmService, db, promptLoader);
+  const trendScoutAgent = new TrendScoutAgent(llmService, db, promptLoader);
+  const topicStrategistAgent = new TopicStrategistAgent(llmService, db, promptLoader);
+  const outlineGeneratorAgent = new OutlineGeneratorAgent(llmService, db, promptLoader);
+  const seoOptimizerAgent = new SeoOptimizerAgent(llmService, db, promptLoader);
+  const finalQaAgent = new FinalQaAgent(llmService, db, promptLoader);
+  const contentCalendarService = new ContentCalendarService(db);
+
+  async function publishProgress(
+    jobId: string,
+    step: string,
+    status: 'running' | 'done' | 'failed',
+    error?: string,
+  ): Promise<void> {
+    try {
+      await publisher.publish(
+        `job:${jobId}:progress`,
+        JSON.stringify({
+          jobId,
+          agentName: step,
+          status,
+          agentRunId: '',
+          timestamp: new Date().toISOString(),
+          ...(error ? { error } : {}),
+        }),
+      );
+    } catch {
+      // non-fatal — never break execution for pub/sub failures
+    }
+  }
+
+  const worker = new Worker(
+    'content-calendar',
+    async (job) => {
+      const { jobId, channelUrl, niche, preferences } = job.data as {
+        jobId: string;
+        channelUrl: string;
+        niche: string;
+        preferences?: string;
+      };
+
+      await db
+        .update(contentCalendarJobs)
+        .set({ status: 'running', current_step: 'starting', started_at: new Date() })
+        .where(eq(contentCalendarJobs.id, jobId));
+
+      await runPipeline(
+        { jobId, channelUrl, niche, preferences },
+        {
+          db,
+          inputValidator,
+          channelDataCollector,
+          trendDataCollector,
+          channelAnalyzerAgent,
+          trendScoutAgent,
+          topicStrategistAgent,
+          outlineGeneratorAgent,
+          seoOptimizerAgent,
+          finalQaAgent,
+          contentCalendarService,
+        },
+        (step, status, error) => publishProgress(jobId, step, status, error),
+      );
+    },
+    {
+      connection: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT || '6379'),
+      },
+    },
+  );
+
+  worker.on('completed', (job) => console.log(`Job ${job.id} completed`));
+  worker.on('failed', (job, err) => console.error(`Job ${job?.id} failed:`, err));
+})().catch((err) => {
+  console.error('Worker init failed:', err);
+  process.exit(1);
+});

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getCalendar } from '../api/contentCalendarClient';
 import { CalendarSummaryCard } from '../components/CalendarSummaryCard';
+import { FeedbackRating } from '../components/FeedbackRating';
 import { MarkdownExportButton } from '../components/MarkdownExportButton';
 import { PdfExportButton } from '../components/PdfExportButton';
 import { VideoConceptCard } from '../components/VideoConceptCard';
@@ -11,6 +12,8 @@ const MOCK_CALENDAR: CalendarResponse = {
   id: 'mock',
   jobId: 'mock-job',
   qualityScore: '8.4',
+  userRating: null,
+  userFeedback: null,
   createdAt: new Date().toISOString(),
   strategySummary:
     'Focus on high-retention tutorial content that bridges beginner and intermediate skill levels. Prioritize evergreen topics with a programming-focused niche, supplemented by trending framework breakdowns to capture search traffic spikes.',
@@ -641,6 +644,16 @@ export function CalendarResultPage() {
             <MarkdownExportButton calendarId={calendar.id} />
             <PdfExportButton calendarId={calendar.id} />
           </div>
+        </div>
+      )}
+
+      {calendar.id && (
+        <div className="mt-8 pt-6 border-t border-gray-200">
+          <FeedbackRating
+            calendarId={calendar.id}
+            initialRating={calendar.userRating}
+            initialFeedback={calendar.userFeedback}
+          />
         </div>
       )}
     </div>

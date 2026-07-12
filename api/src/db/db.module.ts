@@ -3,7 +3,7 @@ import { createDb } from './index';
 
 const DB_PROVIDER = {
   provide: 'DB',
-  useFactory: () => createDb(),
+  useFactory: async () => createDb(),
 };
 
 @Global()

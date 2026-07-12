@@ -1,5 +1,6 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { desc, eq, sql } from 'drizzle-orm';
+import { RateCalendarDto } from './dto/rate-calendar.dto';
 import { CreateCalendarDto } from './dto/create-calendar.dto';
 import { QueueService } from '../queue/queue.service';
 import {
@@ -106,6 +107,8 @@ export class ContentCalendarService {
       trendAnalysis: calendar.content_calendars.trend_analysis,
       topicSelectionRationale: calendar.content_calendars.topic_selection_rationale,
       qualityScore: calendar.content_calendars.quality_score,
+      userRating: calendar.content_calendars.user_rating,
+      userFeedback: calendar.content_calendars.user_feedback,
       createdAt: calendar.content_calendars.created_at,
       videoConcepts: conceptsWithDetails,
     };
@@ -152,6 +155,24 @@ export class ContentCalendarService {
       page,
       pageSize,
     };
+  }
+
+  async rateCalendar(calendarId: string, userId: string, dto: RateCalendarDto): Promise<void> {
+    const [calendar] = await this.db
+      .select({ id: contentCalendars.id, user_id: contentCalendarJobs.user_id })
+      .from(contentCalendars)
+      .innerJoin(contentCalendarJobs, eq(contentCalendarJobs.id, contentCalendars.job_id))
+      .where(eq(contentCalendars.id, calendarId))
+      .limit(1);
+
+    if (!calendar || calendar.user_id !== userId) {
+      throw new NotFoundException('Calendar not found');
+    }
+
+    await this.db
+      .update(contentCalendars)
+      .set({ user_rating: dto.rating, user_feedback: dto.feedback ?? null })
+      .where(eq(contentCalendars.id, calendarId));
   }
 
   async getCalendarMarkdown(calendarId: string, userId: string): Promise<string> {

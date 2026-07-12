@@ -53,6 +53,24 @@ export async function createContentCalendar(
   return res.json();
 }
 
+export async function rateCalendar(
+  id: string,
+  rating: number,
+  feedback?: string,
+): Promise<void> {
+  const res = await fetch(`/api/content-calendars/${id}/rate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rating, feedback }),
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message || `Request failed: ${res.status}`);
+  }
+}
+
 export async function getCalendar(id: string): Promise<CalendarResponse> {
   const res = await fetch(`/api/content-calendars/${id}`, {
     credentials: 'include',

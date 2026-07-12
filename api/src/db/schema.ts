@@ -51,6 +51,8 @@ export const contentCalendars = pgTable('content_calendars', {
   topic_selection_rationale: text('topic_selection_rationale'),
   final_markdown: text('final_markdown'),
   quality_score: numeric('quality_score'),
+  user_rating: integer('user_rating'),
+  user_feedback: text('user_feedback'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 

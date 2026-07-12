@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { ContentCalendarService } from './content-calendar.service';
 import { CreateCalendarDto } from './dto/create-calendar.dto';
 import { RegenerateSectionDto } from './dto/regenerate-section.dto';
+import { RateCalendarDto } from './dto/rate-calendar.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { QuotaGuard } from '../modules/quota/quota.guard';
 import { RegenerationService } from '../modules/content-calendar/regeneration.service';
@@ -75,6 +76,19 @@ export class ContentCalendarController {
     } catch (err) {
       res.status(500).json({ message: 'PDF generation failed', error: (err as Error).message });
     }
+  }
+
+  @Post(':id/rate')
+  @UseGuards(AuthGuard)
+  @HttpCode(200)
+  async rateCalendar(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: RateCalendarDto,
+    @Req() req: Request,
+  ) {
+    const user = req.user as { id: string };
+    await this.contentCalendarService.rateCalendar(id, user.id, dto);
+    return { success: true };
   }
 
   @Post(':id/regenerate-section')

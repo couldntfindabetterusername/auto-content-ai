@@ -84,6 +84,8 @@ export interface CalendarResponse {
   trendAnalysis: TrendAnalysis | null;
   topicSelectionRationale: string | null;
   qualityScore: string | null;
+  userRating: number | null;
+  userFeedback: string | null;
   createdAt: string;
   videoConcepts: VideoConcept[];
 }

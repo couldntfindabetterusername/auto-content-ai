@@ -1,4 +1,4 @@
-CREATE TABLE "content_calendar_jobs" (
+CREATE TABLE IF NOT EXISTS "content_calendar_jobs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid,
 	"channel_url" text NOT NULL,
@@ -14,4 +14,4 @@ CREATE TABLE "content_calendar_jobs" (
 	"completed_at" timestamp with time zone
 );
 --> statement-breakpoint
-ALTER TABLE "content_calendar_jobs" ADD CONSTRAINT "content_calendar_jobs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
+DO $$ BEGIN ALTER TABLE "content_calendar_jobs" ADD CONSTRAINT "content_calendar_jobs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
