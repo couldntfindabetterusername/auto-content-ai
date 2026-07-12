@@ -22,9 +22,10 @@ interface Props {
   seoDescription: string | null;
   seoKeywords: SeoKeyword[];
   thumbnailJson: unknown;
+  regenButton?: React.ReactNode;
 }
 
-export function SeoPackagePanel({ seoDescription, seoKeywords, thumbnailJson }: Props) {
+export function SeoPackagePanel({ seoDescription, seoKeywords, thumbnailJson, regenButton }: Props) {
   const [open, setOpen] = useState(false);
 
   const tags = seoKeywords.filter((k) => k.keyword_type === 'tag');
@@ -37,13 +38,16 @@ export function SeoPackagePanel({ seoDescription, seoKeywords, thumbnailJson }: 
 
   return (
     <div className="border-t border-gray-100 pt-4 mt-4">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 w-full text-left"
-      >
-        <span>{open ? '▾' : '▸'}</span>
-        SEO Package
-      </button>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 flex-1 text-left"
+        >
+          <span>{open ? '▾' : '▸'}</span>
+          SEO Package
+        </button>
+        {regenButton}
+      </div>
 
       {open && (
         <div className="mt-3 space-y-4">

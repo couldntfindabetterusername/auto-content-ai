@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { VideoConcept } from '../types/calendar';
+import { getCalendar } from '../api/contentCalendarClient';
 import { CopyButton } from './CopyButton';
 import { SeoPackagePanel } from './SeoPackagePanel';
+import { RegenerateSectionButton } from './RegenerateSectionButton';
 
 interface OutlineSection {
   timestamp: string;
@@ -48,20 +50,25 @@ function asCta(v: unknown): Cta | null {
 function CollapsibleSection({
   label,
   children,
+  actions,
 }: {
   label: string;
   children: React.ReactNode;
+  actions?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="border-t border-gray-100 pt-3">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 w-full text-left"
-      >
-        <span>{open ? '▾' : '▸'}</span>
-        {label}
-      </button>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 flex-1 text-left"
+        >
+          <span>{open ? '▾' : '▸'}</span>
+          {label}
+        </button>
+        {actions}
+      </div>
       {open && <div className="mt-3">{children}</div>}
     </div>
   );
@@ -92,69 +99,115 @@ function buildConceptText(concept: VideoConcept): string {
 }
 
 export function VideoConceptCard({ concept }: Props) {
-  const outline = asOutline(concept.outline_json);
-  const retentionHooks = asRetentionHooks(concept.retention_tactics);
-  const cta = asCta(concept.cta_json);
+  const [currentConcept, setCurrentConcept] = useState(concept);
 
-  const recommendedTitle = concept.titleOptions.find((t) => t.is_recommended);
-  const otherTitles = concept.titleOptions.filter((t) => !t.is_recommended);
+  useEffect(() => {
+    setCurrentConcept(concept);
+  }, [concept.id]);
+
+  const calendarId = currentConcept.calendar_id;
+  const videoIndex = currentConcept.position - 1;
+
+  async function refreshConcept() {
+    if (!calendarId || calendarId === 'mock') return;
+    try {
+      const fresh = await getCalendar(calendarId);
+      const freshConcept = fresh.videoConcepts.find((c) => c.id === currentConcept.id);
+      if (freshConcept) setCurrentConcept(freshConcept);
+    } catch {
+      // ignore — stale data is acceptable on refresh failure
+    }
+  }
+
+  const outline = asOutline(currentConcept.outline_json);
+  const retentionHooks = asRetentionHooks(currentConcept.retention_tactics);
+  const cta = asCta(currentConcept.cta_json);
+
+  const recommendedTitle = currentConcept.titleOptions.find((t) => t.is_recommended);
+  const otherTitles = currentConcept.titleOptions.filter((t) => !t.is_recommended);
 
   return (
     <div className="p-6 border rounded-xl bg-white space-y-4 text-left">
       <div className="flex items-start gap-3">
         <span className="shrink-0 w-7 h-7 rounded-full bg-gray-100 border border-gray-200 text-gray-500 text-xs font-semibold flex items-center justify-center">
-          {concept.position}
+          {currentConcept.position}
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <p className="text-lg font-semibold text-gray-900 leading-snug flex-1">
-              {concept.recommended_title ?? concept.topic}
+              {currentConcept.recommended_title ?? currentConcept.topic}
             </p>
-            <CopyButton text={buildConceptText(concept)} label="Copy full concept" />
+            <div className="flex items-center gap-1 shrink-0">
+              <RegenerateSectionButton
+                calendarId={calendarId}
+                videoIndex={videoIndex}
+                section="full_concept"
+                onSuccess={refreshConcept}
+              />
+              <CopyButton text={buildConceptText(currentConcept)} label="Copy full concept" />
+            </div>
           </div>
-          <p className="text-sm text-gray-500 mt-0.5">{concept.topic}</p>
+          <p className="text-sm text-gray-500 mt-0.5">{currentConcept.topic}</p>
           <div className="flex flex-wrap gap-2 mt-2">
-            {concept.content_type && (
+            {currentConcept.content_type && (
               <span className="inline-block px-2 py-0.5 bg-purple-100 text-purple-800 border border-purple-200 text-xs font-medium rounded">
-                {concept.content_type}
+                {currentConcept.content_type}
               </span>
             )}
-            {concept.confidence_score && (
+            {currentConcept.confidence_score && (
               <span
                 className={`inline-block px-2 py-0.5 text-xs font-medium rounded border ${
-                  Number(concept.confidence_score) >= 0.7
+                  Number(currentConcept.confidence_score) >= 0.7
                     ? 'bg-green-100 text-green-800 border-green-200'
-                    : Number(concept.confidence_score) >= 0.4
+                    : Number(currentConcept.confidence_score) >= 0.4
                       ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
                       : 'bg-red-100 text-red-800 border-red-200'
                 }`}
               >
-                {Math.round(Number(concept.confidence_score) * 100)}% confidence
+                {Math.round(Number(currentConcept.confidence_score) * 100)}% confidence
               </span>
             )}
           </div>
         </div>
       </div>
 
-      {concept.hook && (
+      {currentConcept.hook && (
         <div className="p-3 bg-amber-50 border border-amber-100 rounded-lg">
           <div className="flex items-center justify-between mb-1">
             <p className="text-xs font-medium text-amber-700">Hook</p>
-            <CopyButton text={concept.hook} label="Copy hook" />
+            <div className="flex items-center gap-1">
+              <RegenerateSectionButton
+                calendarId={calendarId}
+                videoIndex={videoIndex}
+                section="hook"
+                onSuccess={refreshConcept}
+              />
+              <CopyButton text={currentConcept.hook} label="Copy hook" />
+            </div>
           </div>
-          <p className="text-sm text-amber-900 leading-relaxed">{concept.hook}</p>
+          <p className="text-sm text-amber-900 leading-relaxed">{currentConcept.hook}</p>
         </div>
       )}
 
-      {concept.goal && (
+      {currentConcept.goal && (
         <div>
           <p className="text-xs font-medium text-gray-500 mb-1">Goal</p>
-          <p className="text-sm text-gray-700">{concept.goal}</p>
+          <p className="text-sm text-gray-700">{currentConcept.goal}</p>
         </div>
       )}
 
-      {concept.titleOptions.length > 0 && (
-        <CollapsibleSection label={`Title options (${concept.titleOptions.length})`}>
+      {currentConcept.titleOptions.length > 0 && (
+        <CollapsibleSection
+          label={`Title options (${currentConcept.titleOptions.length})`}
+          actions={
+            <RegenerateSectionButton
+              calendarId={calendarId}
+              videoIndex={videoIndex}
+              section="titles"
+              onSuccess={refreshConcept}
+            />
+          }
+        >
           <div className="space-y-3">
             {recommendedTitle && (
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -192,7 +245,17 @@ export function VideoConceptCard({ concept }: Props) {
       )}
 
       {outline.length > 0 && (
-        <CollapsibleSection label={`Outline (${outline.length} sections)`}>
+        <CollapsibleSection
+          label={`Outline (${outline.length} sections)`}
+          actions={
+            <RegenerateSectionButton
+              calendarId={calendarId}
+              videoIndex={videoIndex}
+              section="outline"
+              onSuccess={refreshConcept}
+            />
+          }
+        >
           <div className="space-y-3">
             {outline.map((section, i) => (
               <div key={`${section.timestamp}-${i}`} className="pl-3 border-l-2 border-gray-200">
@@ -257,9 +320,17 @@ export function VideoConceptCard({ concept }: Props) {
       )}
 
       <SeoPackagePanel
-        seoDescription={concept.seo_description}
-        seoKeywords={concept.seoKeywords}
-        thumbnailJson={concept.thumbnail_json}
+        seoDescription={currentConcept.seo_description}
+        seoKeywords={currentConcept.seoKeywords}
+        thumbnailJson={currentConcept.thumbnail_json}
+        regenButton={
+          <RegenerateSectionButton
+            calendarId={calendarId}
+            videoIndex={videoIndex}
+            section="seo"
+            onSuccess={refreshConcept}
+          />
+        }
       />
     </div>
   );
