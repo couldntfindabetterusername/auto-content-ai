@@ -56,7 +56,11 @@ export class AppModule implements NestModule {
       .apply(
         session({
           store,
-          secret: process.env.SESSION_SECRET || 'autocontent-dev-secret',
+          secret: (() => {
+            const secret = process.env.SESSION_SECRET;
+            if (!secret) throw new Error('SESSION_SECRET env var is required');
+            return secret;
+          })(),
           resave: false,
           saveUninitialized: false,
           cookie: {
