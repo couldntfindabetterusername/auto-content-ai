@@ -6,8 +6,10 @@ import { createDb } from '../db/index';
 import { contentCalendarJobs } from '../db/schema';
 import { YoutubeService } from '../modules/youtube/youtube.service';
 import { MetricsService } from '../modules/youtube/metrics.service';
+import { TrendsService } from '../modules/trends/trends.service';
 import { InputValidator } from '../modules/agents/stages/input-validator';
 import { ChannelDataCollector } from '../modules/agents/stages/channel-data-collector';
+import { TrendDataCollector } from '../modules/agents/stages/trend-data-collector';
 
 const db = createDb();
 
@@ -31,8 +33,12 @@ const youtubeService = new YoutubeService(envConfig as any);
 youtubeService.onModuleInit();
 
 const metricsService = new MetricsService();
+const trendsService = new TrendsService(envConfig as any, db);
+trendsService.onModuleInit();
+
 const inputValidator = new InputValidator();
 const channelDataCollector = new ChannelDataCollector(youtubeService, metricsService);
+const trendDataCollector = new TrendDataCollector(youtubeService, trendsService);
 
 async function publishProgress(
   jobId: string,
@@ -113,7 +119,28 @@ const worker = new Worker(
       throw err;
     }
 
-    return { validated, channelData };
+    // Stage 3: collect trend data
+    await db
+      .update(contentCalendarJobs)
+      .set({ current_step: 'researching_trends' })
+      .where(eq(contentCalendarJobs.id, jobId));
+    await publishProgress(jobId, 'researching_trends', 'running');
+
+    let trendData;
+    try {
+      trendData = await trendDataCollector.collect(validated.niche);
+      await publishProgress(jobId, 'researching_trends', 'done');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await db
+        .update(contentCalendarJobs)
+        .set({ status: 'failed', error_message: message, completed_at: new Date() })
+        .where(eq(contentCalendarJobs.id, jobId));
+      await publishProgress(jobId, 'researching_trends', 'failed', message);
+      throw err;
+    }
+
+    return { validated, channelData, trendData };
   },
   {
     connection: {
