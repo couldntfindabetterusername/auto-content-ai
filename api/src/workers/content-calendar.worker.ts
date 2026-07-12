@@ -29,6 +29,7 @@ import { runPipeline } from './pipeline';
   const publisher = new Redis({
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT || '6379'),
+    password: process.env.REDIS_PASSWORD || undefined,
   });
 
   // Minimal ConfigService shim — lets services read from process.env
@@ -130,6 +131,7 @@ import { runPipeline } from './pipeline';
       connection: {
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT || '6379'),
+        password: process.env.REDIS_PASSWORD || undefined,
       },
       lockDuration: 300000, // 5 min — LLM pipeline takes 2-4 min
       maxStalledCount: 1,
