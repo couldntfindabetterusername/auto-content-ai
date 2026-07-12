@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getCalendar } from '../api/contentCalendarClient';
 import { CalendarSummaryCard } from '../components/CalendarSummaryCard';
 import { MarkdownExportButton } from '../components/MarkdownExportButton';
+import { PdfExportButton } from '../components/PdfExportButton';
 import { VideoConceptCard } from '../components/VideoConceptCard';
 import type { CalendarResponse } from '../types/calendar';
 
@@ -636,7 +637,10 @@ export function CalendarResultPage() {
       {calendar.id && (
         <div className="mt-10 pt-6 border-t border-gray-200">
           <p className="text-sm font-medium text-gray-700 mb-3">Export</p>
-          <MarkdownExportButton calendarId={calendar.id} />
+          <div className="flex flex-wrap gap-3">
+            <MarkdownExportButton calendarId={calendar.id} />
+            <PdfExportButton calendarId={calendar.id} />
+          </div>
         </div>
       )}
     </div>
