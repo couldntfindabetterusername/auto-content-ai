@@ -8,7 +8,9 @@ import * as os from 'os';
 
 const CACHE_DIR = path.join(os.tmpdir(), 'autocontent-pdfs');
 const TEMPLATE_PATH = path.join(__dirname, 'pdf-template.html');
-const DANGEROUS_TAGS = /<(script|iframe|object|embed|form)[^>]*>[\s\S]*?<\/\1>|<(script|iframe|object|embed|form)[^>]*\/>/gi;
+const DANGEROUS_TAGS = /<(script|style|iframe|object|embed|form)[^>]*>[\s\S]*?<\/\1>|<(script|style|iframe|object|embed|form)[^>]*\/>/gi;
+const EVENT_HANDLERS = /\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi;
+const JS_URLS = /\b(href|src)\s*=\s*["']?\s*javascript:[^"'\s>]*/gi;
 
 @Injectable()
 export class PdfRenderer {
@@ -58,7 +60,10 @@ export class PdfRenderer {
     );
 
     const rawHtml = marked.parse(processedMarkdown) as string;
-    const content = rawHtml.replace(DANGEROUS_TAGS, '');
+    const content = rawHtml
+      .replace(DANGEROUS_TAGS, '')
+      .replace(EVENT_HANDLERS, '')
+      .replace(JS_URLS, '');
     return this.getTemplate().replace('<!--CONTENT-->', content);
   }
 
