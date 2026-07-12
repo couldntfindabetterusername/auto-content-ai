@@ -117,7 +117,7 @@ export class YoutubeService implements OnModuleInit {
       channelId,
       type: ['video'],
       order: 'date',
-      maxResults: 15,
+      maxResults: 30,
     });
 
     const items = searchRes.data.items ?? [];

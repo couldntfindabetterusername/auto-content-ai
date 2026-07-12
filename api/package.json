@@ -11,6 +11,8 @@
     "build": "nest build",
     "start:worker": "tsx src/workers/worker.ts",
     "start:worker:dev": "tsx watch src/workers/worker.ts",
+		"start:debug": "nest start --debug --watch",
+		"start:worker:debug": "node --inspect=9230 --require tsx/cjs src/workers/worker.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage"

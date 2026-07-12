@@ -32,10 +32,11 @@ export class ContentCalendarService {
       const parsed = new URL(url);
       const path = parsed.pathname;
 
-      // /channel/UCxxxx → channel/UCxxxx
-      if (path.startsWith('/channel/')) return path.slice(1);
-      // /@handle or /c/handle → handle
-      if (path.startsWith('/@')) return path.slice(2);
+      // /channel/UCxxxx → UCxxxx
+      if (path.startsWith('/channel/')) return path.slice('/channel/'.length);
+      // /@handle → @handle
+      if (path.startsWith('/@')) return path.slice(1);
+      // /c/handle → handle
       if (path.startsWith('/c/')) return path.slice(3);
 
       return path.slice(1);

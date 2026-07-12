@@ -131,6 +131,8 @@ import { runPipeline } from './pipeline';
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT || '6379'),
       },
+      lockDuration: 300000, // 5 min — LLM pipeline takes 2-4 min
+      maxStalledCount: 1,
     },
   );
 

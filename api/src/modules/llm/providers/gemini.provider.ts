@@ -4,16 +4,16 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { LlmProvider, LlmProviderResponse, ModelClass } from '../llm.types';
 
 const MODELS: Record<ModelClass, string> = {
-  cheap: 'gemini-2.0-flash',
-  mid: 'gemini-2.5-flash',
-  strong: 'gemini-2.5-pro',
+  cheap: 'gemini-3.1-flash-lite',
+  mid: 'gemini-3-flash-preview',
+  strong: 'gemini-3.5-flash',
 };
 
 // Pricing per 1M tokens (USD) — verify at ai.google.dev/pricing
 const PRICING: Record<string, { input: number; output: number }> = {
-  'gemini-2.0-flash': { input: 0.1, output: 0.4 },
-  'gemini-2.5-flash': { input: 0.15, output: 0.6 },
-  'gemini-2.5-pro': { input: 1.25, output: 5.0 },
+  'gemini-3.1-flash-lite': { input: 0.25, output: 1.5 },
+  'gemini-3-flash-preview': { input: 0.5, output: 3.0 },
+  'gemini-3.5-flash': { input: 1.5, output: 9.0 },
 };
 
 const DEFAULT_MAX_TOKENS = 8192;
@@ -31,6 +31,19 @@ export class GeminiProvider implements LlmProvider {
     return MODELS[modelClass];
   }
 
+  private async withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await fn();
+      } catch (err: any) {
+        const is503 = err?.message?.includes('503') || err?.status === 503;
+        if (!is503 || attempt === maxRetries - 1) throw err;
+        await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
+      }
+    }
+    throw new Error('unreachable');
+  }
+
   async generate(
     model: string,
     prompt: string,
@@ -42,10 +55,12 @@ export class GeminiProvider implements LlmProvider {
       ...(systemPrompt ? { systemInstruction: systemPrompt } : {}),
     });
 
-    const result = await genModel.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: maxTokens },
-    });
+    const result = await this.withRetry(() =>
+      genModel.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: maxTokens },
+      }),
+    );
 
     const response = result.response;
     const usage = response.usageMetadata;
