@@ -1,0 +1,8 @@
+services:
+  api:
+    depends_on: []
+  worker:
+    depends_on: []
+  web:
+    depends_on:
+      - api
