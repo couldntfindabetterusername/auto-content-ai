@@ -3,6 +3,7 @@ databases:
     databaseName: autocontent
     user: autocontent
     plan: free
+    ipAllowList: []
 
 services:
   - type: redis
