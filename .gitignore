@@ -26,6 +26,9 @@ Thumbs.db
 # Claude
 .claude
 
+# Logs
+logs/
+
 # Tasks
 tasks
 task-tracker.md
