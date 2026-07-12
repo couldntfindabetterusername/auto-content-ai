@@ -4,7 +4,7 @@ import { ContentCalendarService } from './content-calendar.service';
 import { CreateCalendarDto } from './dto/create-calendar.dto';
 import { AuthGuard } from '../auth/auth.guard';
 
-@Controller('content-calendars')
+@Controller('api/content-calendars')
 export class ContentCalendarController {
   constructor(private readonly contentCalendarService: ContentCalendarService) {}
 
