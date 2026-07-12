@@ -1,4 +1,4 @@
-import { integer, jsonb, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, integer, jsonb, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -40,6 +40,57 @@ export const agentRuns = pgTable('agent_runs', {
   tokens_input: integer('tokens_input'),
   tokens_output: integer('tokens_output'),
   cost_usd: numeric('cost_usd'),
+});
+
+export const contentCalendars = pgTable('content_calendars', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  job_id: uuid('job_id').unique().references(() => contentCalendarJobs.id),
+  strategy_summary: text('strategy_summary'),
+  channel_analysis: jsonb('channel_analysis'),
+  trend_analysis: jsonb('trend_analysis'),
+  topic_selection_rationale: text('topic_selection_rationale'),
+  final_markdown: text('final_markdown'),
+  quality_score: numeric('quality_score'),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const videoConcepts = pgTable('video_concepts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  calendar_id: uuid('calendar_id').references(() => contentCalendars.id),
+  position: integer('position').notNull(),
+  topic: text('topic').notNull(),
+  content_type: text('content_type'),
+  goal: text('goal'),
+  recommended_title: text('recommended_title'),
+  hook: text('hook'),
+  outline_json: jsonb('outline_json'),
+  retention_tactics: jsonb('retention_tactics'),
+  cta_json: jsonb('cta_json'),
+  seo_description: text('seo_description'),
+  thumbnail_json: jsonb('thumbnail_json'),
+  performance_prediction_json: jsonb('performance_prediction_json'),
+  confidence_score: numeric('confidence_score'),
+  evidence_json: jsonb('evidence_json'),
+});
+
+export const titleOptions = pgTable('title_options', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  video_concept_id: uuid('video_concept_id').references(() => videoConcepts.id),
+  title: text('title').notNull(),
+  seo_score: numeric('seo_score'),
+  ctr_score: numeric('ctr_score'),
+  rationale: text('rationale'),
+  is_recommended: boolean('is_recommended').default(false),
+});
+
+export const seoKeywords = pgTable('seo_keywords', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  video_concept_id: uuid('video_concept_id').references(() => videoConcepts.id),
+  keyword: text('keyword').notNull(),
+  keyword_type: text('keyword_type'),
+  estimated_volume: text('estimated_volume'),
+  competition: text('competition'),
+  source: text('source'),
 });
 
 export const llmCalls = pgTable('llm_calls', {

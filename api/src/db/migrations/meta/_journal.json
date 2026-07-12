@@ -6,21 +6,28 @@
       "idx": 0,
       "version": "7",
       "when": 1782498802372,
-      "tag": "0000_unique_zaladane",
+      "tag": "0000_create_users",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
       "when": 1782499774933,
-      "tag": "0001_previous_iron_lad",
+      "tag": "0001_create_jobs",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
       "when": 1782500107989,
-      "tag": "0002_futuristic_the_spike",
+      "tag": "0002_create_agent_runs_llm_calls",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782577030307,
+      "tag": "0003_create_content_tables",
       "breakpoints": true
     }
   ]
