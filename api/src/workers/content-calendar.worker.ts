@@ -10,6 +10,18 @@ import { TrendsService } from '../modules/trends/trends.service';
 import { InputValidator } from '../modules/agents/stages/input-validator';
 import { ChannelDataCollector } from '../modules/agents/stages/channel-data-collector';
 import { TrendDataCollector } from '../modules/agents/stages/trend-data-collector';
+import { GeminiProvider } from '../modules/llm/providers/gemini.provider';
+import { LlmProviderFactory } from '../modules/llm/llm-provider.factory';
+import { LlmService } from '../modules/llm/llm.service';
+import { PromptLoader } from '../modules/llm/prompt-loader';
+import { ChannelAnalyzerAgent } from '../modules/agents/channel-analyzer.agent';
+import { TrendScoutAgent } from '../modules/agents/trend-scout.agent';
+import { TopicStrategistAgent } from '../modules/agents/topic-strategist.agent';
+import { OutlineGeneratorAgent } from '../modules/agents/outline-generator.agent';
+import { SeoOptimizerAgent } from '../modules/agents/seo-optimizer.agent';
+import { FinalQaAgent } from '../modules/agents/final-qa.agent';
+import { ContentCalendarService } from '../modules/content-calendar/content-calendar.service';
+import { runPipeline } from './pipeline';
 
 const db = createDb();
 
@@ -18,7 +30,7 @@ const publisher = new Redis({
   port: parseInt(process.env.REDIS_PORT || '6379'),
 });
 
-// Minimal ConfigService shim — lets YoutubeService read from process.env
+// Minimal ConfigService shim — lets services read from process.env
 const envConfig = {
   getOrThrow: <T>(key: string): T => {
     const v = process.env[key];
@@ -36,9 +48,21 @@ const metricsService = new MetricsService();
 const trendsService = new TrendsService(envConfig as any, db);
 trendsService.onModuleInit();
 
+const geminiProvider = new GeminiProvider(envConfig as any);
+const providerFactory = new LlmProviderFactory(geminiProvider);
+const llmService = new LlmService(envConfig as any, db, providerFactory);
+const promptLoader = new PromptLoader();
+
 const inputValidator = new InputValidator();
 const channelDataCollector = new ChannelDataCollector(youtubeService, metricsService);
 const trendDataCollector = new TrendDataCollector(youtubeService, trendsService);
+const channelAnalyzerAgent = new ChannelAnalyzerAgent(llmService, db, promptLoader);
+const trendScoutAgent = new TrendScoutAgent(llmService, db, promptLoader);
+const topicStrategistAgent = new TopicStrategistAgent(llmService, db, promptLoader);
+const outlineGeneratorAgent = new OutlineGeneratorAgent(llmService, db, promptLoader);
+const seoOptimizerAgent = new SeoOptimizerAgent(llmService, db, promptLoader);
+const finalQaAgent = new FinalQaAgent(llmService, db, promptLoader);
+const contentCalendarService = new ContentCalendarService(db);
 
 async function publishProgress(
   jobId: string,
@@ -73,74 +97,28 @@ const worker = new Worker(
       preferences?: string;
     };
 
-    // Stage 1: validate input
     await db
       .update(contentCalendarJobs)
-      .set({ status: 'running', current_step: 'validating_input', started_at: new Date() })
+      .set({ status: 'running', current_step: 'starting', started_at: new Date() })
       .where(eq(contentCalendarJobs.id, jobId));
-    await publishProgress(jobId, 'validating_input', 'running');
 
-    let validated;
-    try {
-      validated = inputValidator.validate({ channelUrl, niche, preferences });
-      await publishProgress(jobId, 'validating_input', 'done');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      await db
-        .update(contentCalendarJobs)
-        .set({ status: 'failed', error_message: message, completed_at: new Date() })
-        .where(eq(contentCalendarJobs.id, jobId));
-      await publishProgress(jobId, 'validating_input', 'failed', message);
-      throw err;
-    }
-
-    // Stage 2: collect channel data
-    await db
-      .update(contentCalendarJobs)
-      .set({ current_step: 'fetching_channel' })
-      .where(eq(contentCalendarJobs.id, jobId));
-    await publishProgress(jobId, 'fetching_channel', 'running');
-
-    let channelData;
-    try {
-      channelData = await channelDataCollector.collect(validated.channelUrl);
-      await db
-        .update(contentCalendarJobs)
-        .set({ channel_id: channelData.channel.id })
-        .where(eq(contentCalendarJobs.id, jobId));
-      await publishProgress(jobId, 'fetching_channel', 'done');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      await db
-        .update(contentCalendarJobs)
-        .set({ status: 'failed', error_message: message, completed_at: new Date() })
-        .where(eq(contentCalendarJobs.id, jobId));
-      await publishProgress(jobId, 'fetching_channel', 'failed', message);
-      throw err;
-    }
-
-    // Stage 3: collect trend data
-    await db
-      .update(contentCalendarJobs)
-      .set({ current_step: 'researching_trends' })
-      .where(eq(contentCalendarJobs.id, jobId));
-    await publishProgress(jobId, 'researching_trends', 'running');
-
-    let trendData;
-    try {
-      trendData = await trendDataCollector.collect(validated.niche);
-      await publishProgress(jobId, 'researching_trends', 'done');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      await db
-        .update(contentCalendarJobs)
-        .set({ status: 'failed', error_message: message, completed_at: new Date() })
-        .where(eq(contentCalendarJobs.id, jobId));
-      await publishProgress(jobId, 'researching_trends', 'failed', message);
-      throw err;
-    }
-
-    return { validated, channelData, trendData };
+    await runPipeline(
+      { jobId, channelUrl, niche, preferences },
+      {
+        db,
+        inputValidator,
+        channelDataCollector,
+        trendDataCollector,
+        channelAnalyzerAgent,
+        trendScoutAgent,
+        topicStrategistAgent,
+        outlineGeneratorAgent,
+        seoOptimizerAgent,
+        finalQaAgent,
+        contentCalendarService,
+      },
+      (step, status, error) => publishProgress(jobId, step, status, error),
+    );
   },
   {
     connection: {
