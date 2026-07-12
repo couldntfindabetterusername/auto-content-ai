@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { desc, eq, sql } from 'drizzle-orm';
+import { desc, eq, inArray, sql } from 'drizzle-orm';
 import { RateCalendarDto } from './dto/rate-calendar.dto';
 import { CreateCalendarDto } from './dto/create-calendar.dto';
 import { QueueService } from '../queue/queue.service';
@@ -83,21 +83,53 @@ export class ContentCalendarService {
       .where(eq(videoConcepts.calendar_id, calendarId))
       .orderBy(videoConcepts.position);
 
-    const conceptsWithDetails = await Promise.all(
-      concepts.map(async (concept: typeof videoConcepts.$inferSelect) => {
-        const titles = await this.db
-          .select()
-          .from(titleOptions)
-          .where(eq(titleOptions.video_concept_id, concept.id));
+    if (concepts.length === 0) {
+      return {
+        id: calendar.content_calendars.id,
+        jobId: calendar.content_calendars.job_id,
+        strategySummary: calendar.content_calendars.strategy_summary,
+        channelAnalysis: calendar.content_calendars.channel_analysis,
+        trendAnalysis: calendar.content_calendars.trend_analysis,
+        topicSelectionRationale: calendar.content_calendars.topic_selection_rationale,
+        qualityScore: calendar.content_calendars.quality_score,
+        userRating: calendar.content_calendars.user_rating,
+        userFeedback: calendar.content_calendars.user_feedback,
+        createdAt: calendar.content_calendars.created_at,
+        videoConcepts: [],
+      };
+    }
 
-        const keywords = await this.db
-          .select()
-          .from(seoKeywords)
-          .where(eq(seoKeywords.video_concept_id, concept.id));
+    const conceptIds = concepts.map((c: typeof videoConcepts.$inferSelect) => c.id);
 
-        return { ...concept, titleOptions: titles, seoKeywords: keywords };
-      }),
-    );
+    const allTitles = await this.db
+      .select()
+      .from(titleOptions)
+      .where(inArray(titleOptions.video_concept_id, conceptIds));
+
+    const allKeywords = await this.db
+      .select()
+      .from(seoKeywords)
+      .where(inArray(seoKeywords.video_concept_id, conceptIds));
+
+    const titlesByConceptId = new Map<string, typeof titleOptions.$inferSelect[]>();
+    for (const t of allTitles) {
+      const arr = titlesByConceptId.get(t.video_concept_id) ?? [];
+      arr.push(t);
+      titlesByConceptId.set(t.video_concept_id, arr);
+    }
+
+    const keywordsByConceptId = new Map<string, typeof seoKeywords.$inferSelect[]>();
+    for (const k of allKeywords) {
+      const arr = keywordsByConceptId.get(k.video_concept_id) ?? [];
+      arr.push(k);
+      keywordsByConceptId.set(k.video_concept_id, arr);
+    }
+
+    const conceptsWithDetails = concepts.map((concept: typeof videoConcepts.$inferSelect) => ({
+      ...concept,
+      titleOptions: titlesByConceptId.get(concept.id) ?? [],
+      seoKeywords: keywordsByConceptId.get(concept.id) ?? [],
+    }));
 
     return {
       id: calendar.content_calendars.id,
