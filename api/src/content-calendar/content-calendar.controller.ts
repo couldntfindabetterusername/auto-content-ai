@@ -3,13 +3,14 @@ import { Request } from 'express';
 import { ContentCalendarService } from './content-calendar.service';
 import { CreateCalendarDto } from './dto/create-calendar.dto';
 import { AuthGuard } from '../auth/auth.guard';
+import { QuotaGuard } from '../modules/quota/quota.guard';
 
 @Controller('api/content-calendars')
 export class ContentCalendarController {
   constructor(private readonly contentCalendarService: ContentCalendarService) {}
 
   @Post('/')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, QuotaGuard)
   async createJob(@Body() dto: CreateCalendarDto, @Req() req: Request) {
     const user = req.user as { id: string };
     return this.contentCalendarService.createJob(dto, user.id);

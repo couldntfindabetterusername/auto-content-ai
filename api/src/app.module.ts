@@ -1,5 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import session from 'express-session';
 import passport from 'passport';
 import { RedisStore } from 'connect-redis';
@@ -19,6 +21,7 @@ import { AdminModule } from './modules/admin/admin.module';
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
     }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 30 }]),
     DbModule,
     QueueModule,
     AuthModule,
@@ -28,6 +31,7 @@ import { AdminModule } from './modules/admin/admin.module';
     AdminModule,
   ],
   controllers: [HealthController],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

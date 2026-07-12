@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { contentCalendarJobs } from '../db/schema';
+import { checkJobCostLimit } from '../modules/quota/quota.service';
 import type { InputValidator, ValidatedInput } from '../modules/agents/stages/input-validator';
 import type { ChannelDataCollector } from '../modules/agents/stages/channel-data-collector';
 import type { TrendDataCollector } from '../modules/agents/stages/trend-data-collector';
@@ -86,6 +87,8 @@ export async function runPipeline(
     }
   };
 
+  const costGuard = () => checkJobCostLimit(db, jobId);
+
   // Stage 1: Input Validator — 10%
   const validated: ValidatedInput = await runStage('validating_input', 10, async () =>
     deps.inputValidator.validate({ channelUrl, niche, preferences }),
@@ -108,6 +111,7 @@ export async function runPipeline(
 
   // Stage 4: Channel Analyzer — 40%
   const channelAnalysis: ChannelAnalysis = await runStage('analyzing_channel', 40, async () => {
+    await costGuard();
     const result = await deps.channelAnalyzerAgent.run(
       { ...channelData, niche: validated.niche },
       jobId,
@@ -117,6 +121,7 @@ export async function runPipeline(
 
   // Stage 5: Trend Scout — 50%
   const trendAnalysis: TrendAnalysis = await runStage('scouting_trends', 50, async () => {
+    await costGuard();
     const result = await deps.trendScoutAgent.run(
       { niche: validated.niche, channelAnalysis, trendData },
       jobId,
@@ -126,6 +131,7 @@ export async function runPipeline(
 
   // Stage 6: Topic Strategist — 60%
   const topicSelection: TopicSelection = await runStage('selecting_topics', 60, async () => {
+    await costGuard();
     const result = await deps.topicStrategistAgent.run(
       {
         niche: validated.niche,
@@ -140,6 +146,7 @@ export async function runPipeline(
 
   // Stage 7: Outline Generator x4 parallel — 62→75%
   const videoConcepts: VideoConcept[] = await runStage('generating_outlines', 62, async () => {
+    await costGuard();
     const results = await deps.outlineGeneratorAgent.runAll(
       topicSelection.selected_topics,
       channelAnalysis,
@@ -154,6 +161,7 @@ export async function runPipeline(
   });
 
   // Stage 8: SEO Optimizer x4 parallel — 75% (partial failure allowed)
+  await costGuard();
   await setProgress(75, 'optimizing_seo');
   await publish('optimizing_seo', 'running');
 
