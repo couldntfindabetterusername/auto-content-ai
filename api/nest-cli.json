@@ -3,7 +3,8 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "assets": [
-      { "include": "db/migrations/**/*", "watchAssets": true }
+      { "include": "db/migrations/**/*", "watchAssets": true },
+      { "include": "modules/export/**/*.html", "watchAssets": true }
     ]
   }
 }
