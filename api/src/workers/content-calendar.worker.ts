@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { Worker } from 'bullmq';
 import Redis from 'ioredis';
+import { getRedisOptions } from '../shared/redis-config';
 import { eq } from 'drizzle-orm';
 import { createDb } from '../db/index';
 import { contentCalendarJobs } from '../db/schema';
@@ -26,11 +27,7 @@ import { runPipeline } from './pipeline';
 (async () => {
   const db = await createDb();
 
-  const publisher = new Redis({
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379'),
-    password: process.env.REDIS_PASSWORD || undefined,
-  });
+  const publisher = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
 
   // Minimal ConfigService shim — lets services read from process.env
   const envConfig = {
@@ -128,11 +125,7 @@ import { runPipeline } from './pipeline';
       }
     },
     {
-      connection: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379'),
-        password: process.env.REDIS_PASSWORD || undefined,
-      },
+      connection: getRedisOptions(),
       lockDuration: 300000, // 5 min — LLM pipeline takes 2-4 min
       maxStalledCount: 1,
     },

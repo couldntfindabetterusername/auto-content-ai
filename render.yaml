@@ -28,21 +28,11 @@ services:
         fromDatabase:
           name: autocontent-db
           property: connectionString
-      - key: REDIS_HOST
+      - key: REDIS_URL
         fromService:
           type: redis
           name: autocontent-redis
-          property: host
-      - key: REDIS_PORT
-        fromService:
-          type: redis
-          name: autocontent-redis
-          property: port
-      - key: REDIS_PASSWORD
-        fromService:
-          type: redis
-          name: autocontent-redis
-          property: password
+          property: connectionString
       - key: LLM_PROVIDER
         value: gemini
       - key: LLM_TIMEOUT_MS
@@ -78,21 +68,11 @@ services:
         fromDatabase:
           name: autocontent-db
           property: connectionString
-      - key: REDIS_HOST
+      - key: REDIS_URL
         fromService:
           type: redis
           name: autocontent-redis
-          property: host
-      - key: REDIS_PORT
-        fromService:
-          type: redis
-          name: autocontent-redis
-          property: port
-      - key: REDIS_PASSWORD
-        fromService:
-          type: redis
-          name: autocontent-redis
-          property: password
+          property: connectionString
       - key: LLM_PROVIDER
         value: gemini
       - key: LLM_TIMEOUT_MS

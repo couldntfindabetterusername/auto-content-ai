@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Queue } from 'bullmq';
+import { getRedisOptions } from '../shared/redis-config';
 
 @Injectable()
 export class QueueService {
@@ -7,11 +8,7 @@ export class QueueService {
 
   constructor() {
     this.queue = new Queue('content-calendar', {
-      connection: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379'),
-        password: process.env.REDIS_PASSWORD || undefined,
-      },
+      connection: getRedisOptions(),
     });
   }
 

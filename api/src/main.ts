@@ -21,11 +21,7 @@ async function bootstrap() {
   await db.execute(sql`SELECT 1`);
   console.log('✓ Database connected');
 
-  const redis = new Redis({
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379'),
-    password: process.env.REDIS_PASSWORD || undefined,
-  });
+  const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
   await redis.ping();
   console.log('✓ Redis connected');
   redis.disconnect();

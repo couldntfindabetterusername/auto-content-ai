@@ -40,11 +40,7 @@ export class TrendsService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    this.redis = new Redis({
-      host: this.config.get<string>('REDIS_HOST', 'localhost'),
-      port: this.config.get<number>('REDIS_PORT', 6379),
-      password: this.config.get<string>('REDIS_PASSWORD', ''),
-    });
+    this.redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
   }
 
   /**
