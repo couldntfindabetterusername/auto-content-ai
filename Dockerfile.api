@@ -1,0 +1,43 @@
+# Stage 1: Production dependencies
+FROM node:20-slim AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY api/package.json ./api/
+COPY web/package.json ./web/
+RUN npm ci --omit=dev
+
+# Stage 2: All dependencies (includes devDependencies for build)
+FROM node:20-slim AS build-deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY api/package.json ./api/
+COPY web/package.json ./web/
+RUN npm ci
+
+# Stage 3: Build
+FROM node:20-slim AS builder
+WORKDIR /app
+COPY --from=build-deps /app/node_modules ./node_modules
+COPY package.json tsconfig.base.json ./
+COPY api/package.json api/tsconfig.json api/nest-cli.json ./api/
+COPY api/src ./api/src
+COPY api/prompts ./api/prompts
+RUN NODE_OPTIONS=--max-old-space-size=4096 npm run build -w api
+
+# Stage 4: Production runner
+FROM node:20-slim AS runner
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+# System chromium (PDF export via Playwright) + curl (health checks)
+# Using system chromium avoids network download during build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
+COPY --from=builder /app/api/dist ./dist
+COPY --from=builder /app/api/prompts ./prompts
+COPY package.json ./
+ENV NODE_ENV=production
+EXPOSE 3000
+CMD ["node", "dist/main"]

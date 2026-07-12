@@ -1,0 +1,11 @@
+# Loaded automatically by docker compose up (dev only)
+# Production: docker compose -f docker-compose.yml up
+
+services:
+  api:
+    environment:
+      NODE_ENV: development
+    restart: on-failure
+
+  web:
+    restart: on-failure

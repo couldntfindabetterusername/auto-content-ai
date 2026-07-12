@@ -1,0 +1,55 @@
+# Stage 1: Build Vite app
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY api/package.json ./api/
+COPY web/package.json ./web/
+RUN npm ci
+COPY web/index.html ./web/
+COPY web/public ./web/public
+COPY web/src ./web/src
+COPY web/tsconfig.json web/tsconfig.app.json web/tsconfig.node.json ./web/
+COPY web/vite.config.ts web/tailwind.config.ts web/postcss.config.js web/components.json ./web/
+RUN npm run build -w web
+
+# Stage 2: Serve with nginx
+FROM nginx:alpine AS runner
+COPY --from=builder /app/web/dist /usr/share/nginx/html
+# SPA: /api/jobs/:id/events gets SSE (unbuffered) proxy; all other /api proxied to backend; fallback to index.html
+RUN printf '%s\n' \
+    'server {' \
+    '    listen 80;' \
+    '    root /usr/share/nginx/html;' \
+    '    index index.html;' \
+    '' \
+    '    location ~* ^/api/jobs/[^/]+/events {' \
+    '        proxy_pass http://api:3000;' \
+    '        proxy_http_version 1.1;' \
+    '        proxy_set_header Connection "";' \
+    '        proxy_set_header Host $host;' \
+    '        proxy_set_header X-Real-IP $remote_addr;' \
+    '        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' \
+    '        proxy_buffering off;' \
+    '        proxy_cache off;' \
+    '        proxy_read_timeout 3600s;' \
+    '        chunked_transfer_encoding on;' \
+    '    }' \
+    '' \
+    '    location /api {' \
+    '        proxy_pass http://api:3000;' \
+    '        proxy_http_version 1.1;' \
+    '        proxy_set_header Upgrade $http_upgrade;' \
+    '        proxy_set_header Connection "upgrade";' \
+    '        proxy_set_header Host $host;' \
+    '        proxy_set_header X-Real-IP $remote_addr;' \
+    '        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' \
+    '        proxy_set_header X-Forwarded-Proto $scheme;' \
+    '    }' \
+    '' \
+    '    location / {' \
+    '        try_files $uri $uri/ /index.html;' \
+    '    }' \
+    '}' \
+    > /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
