@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -11,7 +11,7 @@ export interface PromptResult {
 export class PromptLoader {
   private readonly promptsDir: string;
 
-  constructor(promptsDir?: string) {
+  constructor(@Optional() promptsDir?: string) {
     this.promptsDir = promptsDir ?? path.resolve(process.cwd(), 'prompts');
   }
 

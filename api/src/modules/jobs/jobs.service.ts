@@ -1,7 +1,7 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { MessageEvent } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { contentCalendarJobs } from '../../db/schema';
 import { JobsGateway } from './jobs.gateway';
 
@@ -11,6 +11,26 @@ export class JobsService {
     @Inject('DB') private readonly db: any,
     private readonly gateway: JobsGateway,
   ) {}
+
+  async getJobStatus(jobId: string, userId: string) {
+    const [job] = await this.db
+      .select({
+        id: contentCalendarJobs.id,
+        status: contentCalendarJobs.status,
+        currentStep: contentCalendarJobs.current_step,
+        progressPercent: contentCalendarJobs.progress_percent,
+        errorMessage: contentCalendarJobs.error_message,
+        createdAt: contentCalendarJobs.created_at,
+        startedAt: contentCalendarJobs.started_at,
+        completedAt: contentCalendarJobs.completed_at,
+      })
+      .from(contentCalendarJobs)
+      .where(and(eq(contentCalendarJobs.id, jobId), eq(contentCalendarJobs.user_id, userId)))
+      .limit(1);
+
+    if (!job) throw new NotFoundException('Job not found');
+    return job;
+  }
 
   async subscribeToJobProgress(jobId: string): Promise<Observable<MessageEvent>> {
     const [job] = await this.db

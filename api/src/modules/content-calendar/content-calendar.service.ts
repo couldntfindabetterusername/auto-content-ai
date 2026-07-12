@@ -10,6 +10,7 @@ import type { TopicSelection } from '../agents/schemas/topic-selection.schema';
 import type { VideoConcept } from '../agents/schemas/outline.schema';
 import type { SeoPackage } from '../agents/schemas/seo-package.schema';
 import type { QaResult } from '../agents/schemas/qa-result.schema';
+import { renderMarkdown } from '../export/markdown-renderer';
 
 export interface SaveResultsInput {
   jobId: string;
@@ -29,6 +30,14 @@ export class ContentCalendarService {
       .map((t) => `${t.topic}: ${t.why_now}`)
       .join('\n');
 
+    const finalMarkdown = renderMarkdown({
+      channelAnalysis: input.channelAnalysis,
+      trendAnalysis: input.trendAnalysis,
+      topicSelection: input.topicSelection,
+      videoConcepts: input.videoConcepts,
+      seoPackages: input.seoPackages,
+    });
+
     const [calendarRow] = await this.db
       .insert(contentCalendars)
       .values({
@@ -37,6 +46,7 @@ export class ContentCalendarService {
         channel_analysis: input.channelAnalysis,
         trend_analysis: input.trendAnalysis,
         topic_selection_rationale: rationale,
+        final_markdown: finalMarkdown,
         quality_score: input.qaResult != null ? String(input.qaResult.quality_score) : null,
       })
       .returning({ id: contentCalendars.id });
