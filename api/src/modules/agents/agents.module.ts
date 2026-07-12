@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { LlmModule } from '../llm/llm.module';
 import { DbModule } from '../../db/db.module';
-import { AgentRunnerService } from './agent-runner.service';
 import { ChannelAnalyzerAgent } from './channel-analyzer.agent';
 import { TrendScoutAgent } from './trend-scout.agent';
 import { TopicStrategistAgent } from './topic-strategist.agent';
@@ -11,7 +10,7 @@ import { FinalQaAgent } from './final-qa.agent';
 
 @Module({
   imports: [LlmModule, DbModule],
-  providers: [AgentRunnerService, ChannelAnalyzerAgent, TrendScoutAgent, TopicStrategistAgent, OutlineGeneratorAgent, SeoOptimizerAgent, FinalQaAgent],
-  exports: [AgentRunnerService, ChannelAnalyzerAgent, TrendScoutAgent, TopicStrategistAgent, OutlineGeneratorAgent, SeoOptimizerAgent, FinalQaAgent],
+  providers: [ChannelAnalyzerAgent, TrendScoutAgent, TopicStrategistAgent, OutlineGeneratorAgent, SeoOptimizerAgent, FinalQaAgent],
+  exports: [ChannelAnalyzerAgent, TrendScoutAgent, TopicStrategistAgent, OutlineGeneratorAgent, SeoOptimizerAgent, FinalQaAgent],
 })
 export class AgentsModule {}

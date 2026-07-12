@@ -10,7 +10,7 @@ import type { TopicStrategistAgent } from '../modules/agents/topic-strategist.ag
 import type { OutlineGeneratorAgent } from '../modules/agents/outline-generator.agent';
 import type { SeoOptimizerAgent } from '../modules/agents/seo-optimizer.agent';
 import type { FinalQaAgent } from '../modules/agents/final-qa.agent';
-import type { ContentCalendarService } from '../modules/content-calendar/content-calendar.service';
+import type { CalendarPersistenceService } from '../modules/content-calendar/calendar-persistence.service';
 import type { ChannelAnalysis } from '../modules/agents/schemas/channel-analysis.schema';
 import type { TrendAnalysis } from '../modules/agents/schemas/trend-analysis.schema';
 import type { TopicSelection } from '../modules/agents/schemas/topic-selection.schema';
@@ -36,7 +36,7 @@ export interface PipelineDeps {
   outlineGeneratorAgent: OutlineGeneratorAgent;
   seoOptimizerAgent: SeoOptimizerAgent;
   finalQaAgent: FinalQaAgent;
-  contentCalendarService: ContentCalendarService;
+  contentCalendarService: CalendarPersistenceService;
 }
 
 type PublishFn = (

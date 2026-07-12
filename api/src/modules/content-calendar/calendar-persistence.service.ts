@@ -22,7 +22,7 @@ export interface SaveResultsInput {
   qaResult?: QaResult;
 }
 
-export class ContentCalendarService {
+export class CalendarPersistenceService {
   constructor(private readonly db: any) {}
 
   async saveResults(input: SaveResultsInput): Promise<string> {

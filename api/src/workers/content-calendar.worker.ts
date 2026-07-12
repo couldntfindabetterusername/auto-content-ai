@@ -20,7 +20,7 @@ import { TopicStrategistAgent } from '../modules/agents/topic-strategist.agent';
 import { OutlineGeneratorAgent } from '../modules/agents/outline-generator.agent';
 import { SeoOptimizerAgent } from '../modules/agents/seo-optimizer.agent';
 import { FinalQaAgent } from '../modules/agents/final-qa.agent';
-import { ContentCalendarService } from '../modules/content-calendar/content-calendar.service';
+import { CalendarPersistenceService } from '../modules/content-calendar/calendar-persistence.service';
 import { runPipeline } from './pipeline';
 
 (async () => {
@@ -63,7 +63,7 @@ import { runPipeline } from './pipeline';
   const outlineGeneratorAgent = new OutlineGeneratorAgent(llmService, db, promptLoader);
   const seoOptimizerAgent = new SeoOptimizerAgent(llmService, db, promptLoader);
   const finalQaAgent = new FinalQaAgent(llmService, db, promptLoader);
-  const contentCalendarService = new ContentCalendarService(db);
+  const contentCalendarService = new CalendarPersistenceService(db);
 
   async function publishProgress(
     jobId: string,
