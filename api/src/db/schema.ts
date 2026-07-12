@@ -1,4 +1,4 @@
-import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { integer, jsonb, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -23,4 +23,36 @@ export const contentCalendarJobs = pgTable('content_calendar_jobs', {
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   started_at: timestamp('started_at', { withTimezone: true }),
   completed_at: timestamp('completed_at', { withTimezone: true }),
+});
+
+export const agentRuns = pgTable('agent_runs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  job_id: uuid('job_id').references(() => contentCalendarJobs.id),
+  agent_name: text('agent_name').notNull(),
+  status: text('status').notNull(),
+  input_json: jsonb('input_json'),
+  output_json: jsonb('output_json'),
+  error_message: text('error_message'),
+  started_at: timestamp('started_at', { withTimezone: true }),
+  completed_at: timestamp('completed_at', { withTimezone: true }),
+  model_used: text('model_used'),
+  prompt_version: text('prompt_version'),
+  tokens_input: integer('tokens_input'),
+  tokens_output: integer('tokens_output'),
+  cost_usd: numeric('cost_usd'),
+});
+
+export const llmCalls = pgTable('llm_calls', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  job_id: uuid('job_id').references(() => contentCalendarJobs.id),
+  agent_run_id: uuid('agent_run_id').references(() => agentRuns.id),
+  provider: text('provider'),
+  model: text('model'),
+  purpose: text('purpose'),
+  prompt_hash: text('prompt_hash'),
+  tokens_input: integer('tokens_input'),
+  tokens_output: integer('tokens_output'),
+  cost_usd: numeric('cost_usd'),
+  latency_ms: integer('latency_ms'),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
