@@ -9,6 +9,8 @@
     "dev": "nest start --watch",
     "start": "nest start",
     "build": "nest build",
+    "start:worker": "tsx src/workers/worker.ts",
+    "start:worker:dev": "tsx watch src/workers/worker.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage"

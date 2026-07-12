@@ -4,7 +4,6 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './shared/error-filter';
 import { sql } from 'drizzle-orm';
 import Redis from 'ioredis';
-import './workers/content-calendar.worker';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -29,8 +28,6 @@ async function bootstrap() {
   await redis.ping();
   console.log('✓ Redis connected');
   redis.disconnect();
-
-  console.log('✓ Worker initialized');
 
   await app.listen(port);
   console.log(`Application running on port ${port}`);

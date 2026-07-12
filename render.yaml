@@ -57,6 +57,39 @@ services:
       - key: ADMIN_EMAILS
         sync: false
 
+  - type: worker
+    name: autocontent-worker
+    env: docker
+    dockerfilePath: ./Dockerfile.api
+    dockerContext: .
+    dockerCommand: node dist/workers/worker.js
+    plan: starter
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: autocontent-db
+          property: connectionString
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: autocontent-redis
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: redis
+          name: autocontent-redis
+          property: port
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: LLM_TIMEOUT_MS
+        value: "60000"
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+
   - type: web
     name: autocontent-web
     env: docker
