@@ -93,6 +93,18 @@ export const seoKeywords = pgTable('seo_keywords', {
   source: text('source'),
 });
 
+export const externalApiCalls = pgTable('external_api_calls', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  job_id: uuid('job_id').references(() => contentCalendarJobs.id),
+  provider: text('provider'),
+  endpoint: text('endpoint'),
+  request_hash: text('request_hash'),
+  response_cache_key: text('response_cache_key'),
+  status_code: integer('status_code'),
+  latency_ms: integer('latency_ms'),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
 export const llmCalls = pgTable('llm_calls', {
   id: uuid('id').defaultRandom().primaryKey(),
   job_id: uuid('job_id').references(() => contentCalendarJobs.id),
