@@ -18,7 +18,11 @@ export class JobsController {
   @Get(':jobId/events')
   @Sse()
   @UseGuards(AuthGuard)
-  async streamProgress(@Param('jobId', ParseUUIDPipe) jobId: string): Promise<Observable<MessageEvent>> {
-    return this.jobsService.subscribeToJobProgress(jobId);
+  async streamProgress(
+    @Param('jobId', ParseUUIDPipe) jobId: string,
+    @Req() req: Request,
+  ): Promise<Observable<MessageEvent>> {
+    const user = req.user as { id: string };
+    return this.jobsService.subscribeToJobProgress(jobId, user.id);
   }
 }

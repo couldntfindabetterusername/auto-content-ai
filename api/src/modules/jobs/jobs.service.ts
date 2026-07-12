@@ -32,11 +32,11 @@ export class JobsService {
     return job;
   }
 
-  async subscribeToJobProgress(jobId: string): Promise<Observable<MessageEvent>> {
+  async subscribeToJobProgress(jobId: string, userId: string): Promise<Observable<MessageEvent>> {
     const [job] = await this.db
       .select({ id: contentCalendarJobs.id })
       .from(contentCalendarJobs)
-      .where(eq(contentCalendarJobs.id, jobId))
+      .where(and(eq(contentCalendarJobs.id, jobId), eq(contentCalendarJobs.user_id, userId)))
       .limit(1);
 
     if (!job) throw new NotFoundException(`Job ${jobId} not found`);
