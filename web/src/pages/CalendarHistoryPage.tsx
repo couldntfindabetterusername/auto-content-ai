@@ -3,13 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { listCalendars } from '../api/contentCalendarClient';
 import type { CalendarHistoryItem, CalendarHistoryResponse } from '../api/contentCalendarClient';
 
+const STATUS_STYLES: Record<string, { classes: string; label: string }> = {
+  completed:         { classes: 'bg-green-100 text-green-800',   label: 'Completed' },
+  partial_completed: { classes: 'bg-teal-100 text-teal-800',     label: 'Partial' },
+  running:           { classes: 'bg-blue-100 text-blue-800',     label: 'Running' },
+  processing:        { classes: 'bg-blue-100 text-blue-800',     label: 'Processing' },
+  queued:            { classes: 'bg-yellow-100 text-yellow-800', label: 'Queued' },
+  failed:            { classes: 'bg-red-100 text-red-800',       label: 'Failed' },
+};
+
 function StatusBadge({ status }: { status: string }) {
   const base = 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium';
-  if (status === 'completed') return <span className={`${base} bg-green-100 text-green-800`}>{status}</span>;
-  if (status === 'processing') return <span className={`${base} bg-blue-100 text-blue-800`}>{status}</span>;
-  if (status === 'failed') return <span className={`${base} bg-red-100 text-red-800`}>{status}</span>;
-  if (status === 'queued') return <span className={`${base} bg-yellow-100 text-yellow-800`}>{status}</span>;
-  return <span className={`${base} bg-muted text-foreground/80`}>{status}</span>;
+  const style = STATUS_STYLES[status] ?? {
+    classes: 'bg-muted text-foreground/80',
+    label: status,
+  };
+  return <span className={`${base} ${style.classes}`}>{style.label}</span>;
 }
 
 function ProgressBar({ percent }: { percent: number }) {
@@ -51,7 +60,7 @@ export function CalendarHistoryPage() {
   function handleRowClick(item: CalendarHistoryItem) {
     if (item.calendarId) {
       navigate(`/calendar/${item.calendarId}`);
-    } else if (item.status === 'processing' || item.status === 'queued') {
+    } else if (item.status === 'processing' || item.status === 'queued' || item.status === 'running') {
       navigate(`/jobs/${item.id}`);
     }
   }
@@ -114,7 +123,7 @@ export function CalendarHistoryPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {data.items.map((item) => {
-                  const isClickable = !!item.calendarId || item.status === 'processing' || item.status === 'queued';
+                  const isClickable = !!item.calendarId || item.status === 'processing' || item.status === 'queued' || item.status === 'running';
                   return (
                     <tr
                       key={item.id}
@@ -124,7 +133,7 @@ export function CalendarHistoryPage() {
                       <td className="px-5 py-4">
                         <p className="text-sm font-medium text-foreground truncate max-w-xs">{item.channelUrl}</p>
                         <p className="text-xs text-muted-foreground truncate max-w-xs">{item.niche}</p>
-                        {(item.status === 'processing' || item.status === 'queued') &&
+                        {(item.status === 'processing' || item.status === 'queued' || item.status === 'running') &&
                           item.progressPercent != null && (
                             <ProgressBar percent={item.progressPercent} />
                           )}
