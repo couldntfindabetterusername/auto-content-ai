@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { google, youtube_v3 } from 'googleapis';
 import Redis from 'ioredis';
 import { parseChannelInput, ChannelNotFoundError } from './youtube.utils';
+import { Video } from './youtube.types';
 
 export interface Channel {
   id: string;
@@ -14,6 +15,16 @@ export interface Channel {
 }
 
 const CACHE_TTL_SECONDS = 24 * 60 * 60;
+const VIDEO_CACHE_TTL_SECONDS = 6 * 60 * 60;
+
+function parseIsoDuration(iso: string): number {
+  const match = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(iso);
+  if (!match) return 0;
+  const hours = parseInt(match[1] ?? '0', 10);
+  const minutes = parseInt(match[2] ?? '0', 10);
+  const seconds = parseInt(match[3] ?? '0', 10);
+  return hours * 3600 + minutes * 60 + seconds;
+}
 
 @Injectable()
 export class YoutubeService implements OnModuleInit {
@@ -91,6 +102,53 @@ export class YoutubeService implements OnModuleInit {
     const cacheKey = `yt:channel:${channel.id}`;
     await this.redis.set(cacheKey, JSON.stringify(channel), 'EX', CACHE_TTL_SECONDS);
     return channel;
+  }
+
+  async getRecentVideos(channelId: string): Promise<Video[]> {
+    const cacheKey = `yt:videos:${channelId}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) return JSON.parse(cached) as Video[];
+
+    const searchRes = await this.yt.search.list({
+      part: ['id'],
+      channelId,
+      type: ['video'],
+      order: 'date',
+      maxResults: 15,
+    });
+
+    const items = searchRes.data.items ?? [];
+    if (items.length === 0) return [];
+
+    const videoIds = items
+      .map((i) => i.id?.videoId)
+      .filter((id): id is string => Boolean(id));
+
+    const videosRes = await this.yt.videos.list({
+      part: ['snippet', 'statistics', 'contentDetails'],
+      id: videoIds,
+    });
+
+    const videos: Video[] = (videosRes.data.items ?? [])
+      .map((item): Video | null => {
+        if (!item.id || !item.snippet) return null;
+        return {
+          id: item.id,
+          title: item.snippet.title ?? '',
+          description: item.snippet.description ?? '',
+          publishedAt: item.snippet.publishedAt ?? '',
+          durationSeconds: parseIsoDuration(item.contentDetails?.duration ?? ''),
+          viewCount: parseInt(item.statistics?.viewCount ?? '0', 10),
+          likeCount: parseInt(item.statistics?.likeCount ?? '0', 10),
+          commentCount: parseInt(item.statistics?.commentCount ?? '0', 10),
+          tags: item.snippet.tags ?? [],
+        };
+      })
+      .filter((v): v is Video => v !== null)
+      .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+
+    await this.redis.set(cacheKey, JSON.stringify(videos), 'EX', VIDEO_CACHE_TTL_SECONDS);
+    return videos;
   }
 
   private async extractChannel(
