@@ -1,0 +1,14 @@
+{
+  "name": "autocontent",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "web",
+    "api"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces"
+  }
+}

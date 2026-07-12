@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment
+.env
+
+# Turbo
+.turbo/
+
+# Coverage
+coverage/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude
+
+# Tasks
+tasks
+task-tracker.md
+
+# Project architecture
+AutoContent_Architecture_README.md
+content-calendar-mvp.md
