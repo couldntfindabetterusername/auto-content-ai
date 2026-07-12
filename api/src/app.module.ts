@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { ContentCalendarModule } from './content-calendar/content-calendar.module';
 import { JobsModule } from './modules/jobs/jobs.module';
 import { LlmModule } from './modules/llm/llm.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { LlmModule } from './modules/llm/llm.module';
     ContentCalendarModule,
     JobsModule,
     LlmModule,
+    AdminModule,
   ],
   controllers: [HealthController],
 })
