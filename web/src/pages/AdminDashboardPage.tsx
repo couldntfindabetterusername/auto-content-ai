@@ -11,9 +11,9 @@ interface AdminStats {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 px-5 py-4">
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
+    <div className="bg-card rounded-xl border border-border px-5 py-4">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-2xl font-bold text-foreground">{value}</p>
     </div>
   );
 }
@@ -57,7 +57,7 @@ export function AdminDashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <svg className="animate-spin h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24">
+        <svg className="animate-spin h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
@@ -69,8 +69,8 @@ export function AdminDashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <p className="text-4xl font-bold text-gray-300 mb-2">403</p>
-          <p className="text-gray-500 text-sm">Access denied. Admin only.</p>
+          <p className="text-4xl font-bold text-muted mb-2">403</p>
+          <p className="text-muted-foreground text-sm">Access denied. Admin only.</p>
         </div>
       </div>
     );
@@ -79,7 +79,7 @@ export function AdminDashboardPage() {
   if (error) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-10 text-left">
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-lg px-4 py-3 text-sm">
           {error}
         </div>
       </div>
@@ -89,8 +89,8 @@ export function AdminDashboardPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-10 text-left">
       <div className="mb-8">
-        <p className="text-2xl font-bold text-gray-900">Admin Dashboard</p>
-        <p className="text-sm text-gray-500 mt-1">Job quality and cost overview.</p>
+        <p className="text-2xl font-bold text-foreground">Admin Dashboard</p>
+        <p className="text-sm text-muted-foreground mt-1">Job quality and cost overview.</p>
       </div>
 
       {stats && (

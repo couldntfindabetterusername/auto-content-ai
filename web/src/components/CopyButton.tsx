@@ -1,3 +1,4 @@
+import { Copy, Check } from 'lucide-react';
 import { useClipboard } from '../hooks/useClipboard';
 
 interface Props {
@@ -12,12 +13,12 @@ export function CopyButton({ text, label }: Props) {
     <button
       onClick={() => copyToClipboard(text)}
       title={label ?? 'Copy to clipboard'}
-      className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+      className="inline-flex items-center justify-center w-6 h-6 text-muted-foreground/60 hover:text-foreground hover:bg-muted rounded transition-colors shrink-0"
     >
       {copied ? (
-        <span className="text-green-600 font-medium">Copied!</span>
+        <Check className="w-3.5 h-3.5 text-green-600" />
       ) : (
-        <span>Copy</span>
+        <Copy className="w-3.5 h-3.5" />
       )}
     </button>
   );

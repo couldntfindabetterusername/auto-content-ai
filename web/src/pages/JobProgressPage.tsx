@@ -84,19 +84,19 @@ export function JobProgressPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="bg-white rounded-2xl shadow-md p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-2">Generating Your Content Calendar</h1>
-        <p className="text-sm text-gray-500 mb-8">Job ID: {jobId}</p>
+    <div className="flex items-center justify-center min-h-[calc(100vh-3.5rem)] bg-background px-4">
+      <div className="bg-card border border-border rounded-2xl shadow-sm p-8 w-full max-w-md">
+        <h1 className="text-2xl font-bold text-foreground mb-2">Generating Your Content Calendar</h1>
+        <p className="text-sm text-muted-foreground mb-8">Job ID: {jobId}</p>
 
         <AgentProgressTimeline stages={stages} currentProgress={progress} />
 
         {error && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-700 text-sm font-medium">Error: {error}</p>
+          <div className="mt-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <p className="text-destructive text-sm font-medium">Error: {error}</p>
             <button
               onClick={handleRetry}
-              className="mt-3 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+              className="mt-3 px-4 py-2 bg-destructive text-white text-sm font-medium rounded-lg hover:bg-destructive/90 transition-colors"
             >
               Retry
             </button>

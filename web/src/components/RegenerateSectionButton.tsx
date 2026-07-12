@@ -45,7 +45,7 @@ export function RegenerateSectionButton({ calendarId, videoIndex, section, onSuc
         onClick={handleClick}
         disabled={loading}
         title={`Regenerate ${section}`}
-        className="p-1 text-gray-300 hover:text-gray-500 disabled:opacity-40 transition-colors"
+        className="p-1 text-muted-foreground/40 hover:text-muted-foreground disabled:opacity-40 transition-colors rounded hover:bg-muted"
       >
         {loading ? (
           <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -63,7 +63,7 @@ export function RegenerateSectionButton({ calendarId, videoIndex, section, onSuc
         )}
       </button>
       {error && (
-        <div className="absolute right-0 bottom-full mb-1 z-50 w-52 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600 shadow-sm">
+        <div className="absolute right-0 bottom-full mb-1 z-50 w-52 p-2 bg-destructive/10 border border-destructive/20 rounded text-xs text-destructive shadow-sm">
           {error}
         </div>
       )}

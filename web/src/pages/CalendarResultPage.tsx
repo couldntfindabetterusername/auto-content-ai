@@ -578,15 +578,15 @@ export function CalendarResultPage() {
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-10 space-y-6">
-        <div className="h-8 bg-gray-200 rounded animate-pulse w-48" />
-        <div className="h-4 bg-gray-100 rounded animate-pulse w-32" />
+        <div className="h-8 bg-muted rounded animate-pulse w-48" />
+        <div className="h-4 bg-muted/60 rounded animate-pulse w-32" />
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="p-6 border rounded-xl">
-              <div className="h-5 bg-gray-200 rounded animate-pulse w-36 mb-4" />
+            <div key={i} className="p-6 border border-border rounded-xl">
+              <div className="h-5 bg-muted rounded animate-pulse w-36 mb-4" />
               <div className="space-y-2">
-                <div className="h-4 bg-gray-100 rounded animate-pulse" />
-                <div className="h-4 bg-gray-100 rounded animate-pulse w-4/5" />
+                <div className="h-4 bg-muted/60 rounded animate-pulse" />
+                <div className="h-4 bg-muted/60 rounded animate-pulse w-4/5" />
               </div>
             </div>
           ))}
@@ -598,12 +598,12 @@ export function CalendarResultPage() {
   if (error) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-10">
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-700 font-medium">Failed to load calendar</p>
-          <p className="text-red-600 text-sm mt-1">{error}</p>
+        <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+          <p className="text-destructive font-medium">Failed to load calendar</p>
+          <p className="text-destructive text-sm mt-1">{error}</p>
           <button
             onClick={() => navigate('/new')}
-            className="mt-3 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700"
+            className="mt-3 px-4 py-2 bg-destructive text-white text-sm font-medium rounded-lg hover:bg-destructive/90"
           >
             Generate New Calendar
           </button>
@@ -617,9 +617,9 @@ export function CalendarResultPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-10 text-left">
       <div className="mb-6">
-        <p className="text-2xl font-bold text-gray-900">Your Content Calendar</p>
+        <p className="text-2xl font-bold text-foreground">Your Content Calendar</p>
         {calendar.qualityScore && (
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Quality score: {Math.round(Number(calendar.qualityScore) * 10) / 10}/10
           </p>
         )}
@@ -628,7 +628,7 @@ export function CalendarResultPage() {
 
       {calendar.videoConcepts && calendar.videoConcepts.length > 0 && (
         <div className="mt-8">
-          <p className="text-xl font-bold text-gray-900 mb-4">Video Concepts</p>
+          <p className="text-xl font-bold text-foreground mb-4">Video Concepts</p>
           <div className="space-y-6">
             {calendar.videoConcepts.map((concept) => (
               <VideoConceptCard key={concept.id} concept={concept} />
@@ -638,8 +638,8 @@ export function CalendarResultPage() {
       )}
 
       {calendar.id && (
-        <div className="mt-10 pt-6 border-t border-gray-200">
-          <p className="text-sm font-medium text-gray-700 mb-3">Export</p>
+        <div className="mt-10 pt-6 border-t border-border">
+          <p className="text-sm font-medium text-foreground/80 mb-3">Export</p>
           <div className="flex flex-wrap gap-3">
             <MarkdownExportButton calendarId={calendar.id} />
             <PdfExportButton calendarId={calendar.id} />
@@ -648,7 +648,7 @@ export function CalendarResultPage() {
       )}
 
       {calendar.id && (
-        <div className="mt-8 pt-6 border-t border-gray-200">
+        <div className="mt-8 pt-6 border-t border-border">
           <FeedbackRating
             calendarId={calendar.id}
             initialRating={calendar.userRating}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import type { SeoKeyword } from '../types/calendar';
 
 interface ThumbnailShape {
@@ -37,13 +38,15 @@ export function SeoPackagePanel({ seoDescription, seoKeywords, thumbnailJson, re
   if (!hasContent) return null;
 
   return (
-    <div className="border-t border-gray-100 pt-4 mt-4">
+    <div className="border-t border-border/50 pt-4 mt-2">
       <div className="flex items-center gap-1">
         <button
           onClick={() => setOpen((v) => !v)}
-          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 flex-1 text-left"
+          className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground flex-1 text-left rounded px-1 -mx-1 py-0.5 hover:bg-muted transition-colors"
         >
-          <span>{open ? '▾' : '▸'}</span>
+          <ChevronDown
+            className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${open ? 'rotate-0' : '-rotate-90'}`}
+          />
           SEO Package
         </button>
         {regenButton}
@@ -53,14 +56,46 @@ export function SeoPackagePanel({ seoDescription, seoKeywords, thumbnailJson, re
         <div className="mt-3 space-y-4">
           {seoDescription && (
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-1">Description</p>
-              <p className="text-sm text-gray-700 leading-relaxed">{seoDescription}</p>
+              <p className="text-xs font-medium text-muted-foreground mb-1">Description</p>
+              <p className="text-sm text-foreground/80 leading-relaxed">{seoDescription}</p>
+            </div>
+          )}
+
+          {primary.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-2">Primary keywords</p>
+              <div className="flex flex-wrap gap-1.5">
+                {primary.map((k) => (
+                  <span
+                    key={k.id}
+                    className="inline-block px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 text-xs rounded font-medium"
+                  >
+                    {k.keyword}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {longTail.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-2">Long-tail keywords</p>
+              <div className="flex flex-wrap gap-1.5">
+                {longTail.map((k) => (
+                  <span
+                    key={k.id}
+                    className="inline-block px-2 py-0.5 bg-muted text-foreground/80 border border-border text-xs rounded"
+                  >
+                    {k.keyword}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 
           {tags.length > 0 && (
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-2">Tags</p>
+              <p className="text-xs font-medium text-muted-foreground mb-2">Tags</p>
               <div className="flex flex-wrap gap-1.5">
                 {tags.map((t) => (
                   <span
@@ -74,50 +109,18 @@ export function SeoPackagePanel({ seoDescription, seoKeywords, thumbnailJson, re
             </div>
           )}
 
-          {primary.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-gray-500 mb-2">Primary keywords</p>
-              <div className="flex flex-wrap gap-1.5">
-                {primary.map((k) => (
-                  <span
-                    key={k.id}
-                    className="inline-block px-2 py-0.5 bg-blue-100 text-blue-800 border border-blue-200 text-xs rounded"
-                  >
-                    {k.keyword}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {longTail.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-gray-500 mb-2">Long-tail keywords</p>
-              <div className="flex flex-wrap gap-1.5">
-                {longTail.map((k) => (
-                  <span
-                    key={k.id}
-                    className="inline-block px-2 py-0.5 bg-gray-100 text-gray-700 border border-gray-200 text-xs rounded"
-                  >
-                    {k.keyword}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
           {thumbnail && (
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-2">Thumbnail</p>
-              <div className="p-3 bg-gray-50 rounded-lg text-sm space-y-1">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Thumbnail</p>
+              <div className="p-3 bg-muted/40 rounded-lg text-sm space-y-1 border border-border/50">
                 {thumbnail.text_overlay && (
-                  <p className="text-gray-800">
+                  <p className="text-foreground">
                     <span className="font-medium">Text: </span>
                     {thumbnail.text_overlay}
                   </p>
                 )}
                 {thumbnail.color_direction && (
-                  <p className="text-gray-700">
+                  <p className="text-foreground/80">
                     <span className="font-medium">Colors: </span>
                     {thumbnail.color_direction}
                   </p>
@@ -125,8 +128,8 @@ export function SeoPackagePanel({ seoDescription, seoKeywords, thumbnailJson, re
                 {thumbnail.visual_elements.length > 0 && (
                   <ul className="mt-1 space-y-0.5">
                     {thumbnail.visual_elements.map((el, i) => (
-                      <li key={i} className="flex items-start gap-1.5 text-gray-600">
-                        <span className="mt-1.5 w-1 h-1 rounded-full bg-gray-400 shrink-0" />
+                      <li key={i} className="flex items-start gap-1.5 text-muted-foreground">
+                        <span className="mt-1.5 w-1 h-1 rounded-full bg-muted-foreground/40 shrink-0" />
                         {el}
                       </li>
                     ))}

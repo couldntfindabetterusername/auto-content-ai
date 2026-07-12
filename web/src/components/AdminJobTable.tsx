@@ -29,11 +29,11 @@ export interface AgentRun {
 
 function StatusBadge({ status }: { status: string }) {
   const base = 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium';
-  if (status === 'completed') return <span className={`${base} bg-green-200 text-green-800`}>{status}</span>;
-  if (status === 'processing') return <span className={`${base} bg-blue-200 text-blue-800`}>{status}</span>;
-  if (status === 'failed') return <span className={`${base} bg-red-200 text-red-800`}>{status}</span>;
-  if (status === 'queued') return <span className={`${base} bg-yellow-200 text-yellow-800`}>{status}</span>;
-  return <span className={`${base} bg-gray-200 text-gray-700`}>{status}</span>;
+  if (status === 'completed') return <span className={`${base} bg-green-100 text-green-800`}>{status}</span>;
+  if (status === 'processing') return <span className={`${base} bg-blue-100 text-blue-800`}>{status}</span>;
+  if (status === 'failed') return <span className={`${base} bg-red-100 text-red-800`}>{status}</span>;
+  if (status === 'queued') return <span className={`${base} bg-yellow-100 text-yellow-800`}>{status}</span>;
+  return <span className={`${base} bg-muted text-foreground/80`}>{status}</span>;
 }
 
 function formatDuration(ms: number | null) {
@@ -71,16 +71,16 @@ function AgentRunsPanel({ jobId }: { jobId: string }) {
       });
   }
 
-  if (loading) return <div className="px-6 py-3 text-xs text-gray-400">Loading agent runs...</div>;
+  if (loading) return <div className="px-6 py-3 text-xs text-muted-foreground/60">Loading agent runs...</div>;
   if (error) return <div className="px-6 py-3 text-xs text-red-500">Error: {error}</div>;
-  if (!runs || runs.length === 0) return <div className="px-6 py-3 text-xs text-gray-400">No agent runs recorded.</div>;
+  if (!runs || runs.length === 0) return <div className="px-6 py-3 text-xs text-muted-foreground/60">No agent runs recorded.</div>;
 
   return (
-    <div className="px-6 pb-4 pt-1 bg-gray-50">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Agent Runs</p>
+    <div className="px-6 pb-4 pt-1 bg-muted/30">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Agent Runs</p>
       <table className="min-w-full text-xs">
         <thead>
-          <tr className="text-gray-400 text-left">
+          <tr className="text-muted-foreground/60 text-left">
             <th className="pr-4 pb-1 font-medium">Agent</th>
             <th className="pr-4 pb-1 font-medium">Status</th>
             <th className="pr-4 pb-1 font-medium">Model</th>
@@ -90,19 +90,19 @@ function AgentRunsPanel({ jobId }: { jobId: string }) {
             <th className="pr-4 pb-1 font-medium">Duration</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-border">
           {runs.map((run) => {
             const durationMs =
               run.completed_at && run.started_at
                 ? new Date(run.completed_at).getTime() - new Date(run.started_at).getTime()
                 : null;
             return (
-              <tr key={run.id} className="text-gray-700">
+              <tr key={run.id} className="text-foreground/80">
                 <td className="pr-4 py-1.5 font-mono">{run.agent_name}</td>
                 <td className="pr-4 py-1.5">
                   <StatusBadge status={run.status} />
                 </td>
-                <td className="pr-4 py-1.5 text-gray-500">{run.model_used ?? '—'}</td>
+                <td className="pr-4 py-1.5 text-muted-foreground">{run.model_used ?? '—'}</td>
                 <td className="pr-4 py-1.5">{run.tokens_input ?? '—'}</td>
                 <td className="pr-4 py-1.5">{run.tokens_output ?? '—'}</td>
                 <td className="pr-4 py-1.5">{formatCost(run.cost_usd)}</td>
@@ -140,48 +140,48 @@ export function AdminJobTable({ jobs }: AdminJobTableProps) {
 
   if (jobs.length === 0) {
     return (
-      <div className="text-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-        <p className="text-gray-400 text-sm">No jobs found.</p>
+      <div className="text-center py-16 bg-muted/30 rounded-xl border border-dashed border-border">
+        <p className="text-muted-foreground text-sm">No jobs found.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+    <div className="bg-card rounded-xl border border-border overflow-x-auto">
+      <table className="min-w-full divide-y divide-border">
+        <thead className="bg-muted/40">
           <tr>
-            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
-            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Channel / Niche</th>
-            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Cost</th>
-            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Duration</th>
-            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">QA</th>
-            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Error</th>
+            <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">User</th>
+            <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Channel / Niche</th>
+            <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+            <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cost</th>
+            <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Duration</th>
+            <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">QA</th>
+            <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Error</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-border">
           {jobs.map((job) => (
             <>
               <tr
                 key={job.id}
                 onClick={() => toggleRow(job.id)}
-                className="cursor-pointer hover:bg-gray-50 transition-colors"
+                className="cursor-pointer hover:bg-muted/40 transition-colors"
               >
                 <td className="px-5 py-4">
-                  <p className="text-xs font-medium text-gray-900">{job.user_name ?? '—'}</p>
-                  <p className="text-xs text-gray-400">{job.user_email ?? '—'}</p>
+                  <p className="text-xs font-medium text-foreground">{job.user_name ?? '—'}</p>
+                  <p className="text-xs text-muted-foreground/60">{job.user_email ?? '—'}</p>
                 </td>
                 <td className="px-5 py-4">
-                  <p className="text-xs text-gray-800 truncate max-w-[160px]">{job.channel_url}</p>
-                  <p className="text-xs text-gray-400 truncate max-w-[160px]">{job.niche}</p>
+                  <p className="text-xs text-foreground truncate max-w-[160px]">{job.channel_url}</p>
+                  <p className="text-xs text-muted-foreground/60 truncate max-w-[160px]">{job.niche}</p>
                 </td>
                 <td className="px-5 py-4">
                   <StatusBadge status={job.status} />
                 </td>
-                <td className="px-5 py-4 text-sm text-gray-700">{formatCost(job.total_cost_usd)}</td>
-                <td className="px-5 py-4 text-sm text-gray-700">{formatDuration(job.duration_ms)}</td>
-                <td className="px-5 py-4 text-sm text-gray-700">
+                <td className="px-5 py-4 text-sm text-foreground/80">{formatCost(job.total_cost_usd)}</td>
+                <td className="px-5 py-4 text-sm text-foreground/80">{formatDuration(job.duration_ms)}</td>
+                <td className="px-5 py-4 text-sm text-foreground/80">
                   {job.quality_score ? parseFloat(job.quality_score).toFixed(1) : '—'}
                 </td>
                 <td className="px-5 py-4 text-xs text-red-500 max-w-[160px] truncate">
@@ -190,7 +190,7 @@ export function AdminJobTable({ jobs }: AdminJobTableProps) {
               </tr>
               {expandedId === job.id && (
                 <tr key={`${job.id}-runs`}>
-                  <td colSpan={7} className="border-t border-gray-100">
+                  <td colSpan={7} className="border-t border-border">
                     <AgentRunsPanel jobId={job.id} />
                   </td>
                 </tr>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import type { VideoConcept } from '../types/calendar';
 import { getCalendar } from '../api/contentCalendarClient';
 import { CopyButton } from './CopyButton';
@@ -58,13 +59,15 @@ function CollapsibleSection({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border-t border-gray-100 pt-3">
+    <div className="border-t border-border/50 pt-3">
       <div className="flex items-center gap-1">
         <button
           onClick={() => setOpen((v) => !v)}
-          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 flex-1 text-left"
+          className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground flex-1 text-left rounded px-1 -mx-1 py-0.5 hover:bg-muted transition-colors"
         >
-          <span>{open ? '▾' : '▸'}</span>
+          <ChevronDown
+            className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${open ? 'rotate-0' : '-rotate-90'}`}
+          />
           {label}
         </button>
         {actions}
@@ -127,14 +130,14 @@ export function VideoConceptCard({ concept }: Props) {
   const otherTitles = currentConcept.titleOptions.filter((t) => !t.is_recommended);
 
   return (
-    <div className="p-6 border rounded-xl bg-white space-y-4 text-left">
+    <div className="p-6 border border-border rounded-xl bg-card shadow-sm space-y-4 text-left">
       <div className="flex items-start gap-3">
-        <span className="shrink-0 w-7 h-7 rounded-full bg-gray-100 border border-gray-200 text-gray-500 text-xs font-semibold flex items-center justify-center">
+        <span className="shrink-0 w-7 h-7 rounded-full bg-muted border border-border text-muted-foreground text-xs font-semibold flex items-center justify-center">
           {currentConcept.position}
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <p className="text-lg font-semibold text-gray-900 leading-snug flex-1">
+            <p className="text-base font-semibold text-foreground leading-snug flex-1">
               {currentConcept.recommended_title ?? currentConcept.topic}
             </p>
             <div className="flex items-center gap-1 shrink-0">
@@ -147,7 +150,7 @@ export function VideoConceptCard({ concept }: Props) {
               <CopyButton text={buildConceptText(currentConcept)} label="Copy full concept" />
             </div>
           </div>
-          <p className="text-sm text-gray-500 mt-0.5">{currentConcept.topic}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{currentConcept.topic}</p>
           <div className="flex flex-wrap gap-2 mt-2">
             {currentConcept.content_type && (
               <span className="inline-block px-2 py-0.5 bg-purple-100 text-purple-800 border border-purple-200 text-xs font-medium rounded">
@@ -191,8 +194,8 @@ export function VideoConceptCard({ concept }: Props) {
 
       {currentConcept.goal && (
         <div>
-          <p className="text-xs font-medium text-gray-500 mb-1">Goal</p>
-          <p className="text-sm text-gray-700">{currentConcept.goal}</p>
+          <p className="text-xs font-medium text-muted-foreground mb-1">Goal</p>
+          <p className="text-sm text-foreground/80">{currentConcept.goal}</p>
         </div>
       )}
 
@@ -228,16 +231,16 @@ export function VideoConceptCard({ concept }: Props) {
               </div>
             )}
             {otherTitles.map((t) => (
-              <div key={t.id} className="p-3 bg-gray-50 rounded-lg">
+              <div key={t.id} className="p-3 bg-muted/40 rounded-lg">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm text-gray-800 flex-1">{t.title}</p>
+                  <p className="text-sm text-foreground flex-1">{t.title}</p>
                   <CopyButton text={t.title} label="Copy title" />
                 </div>
-                <div className="flex gap-4 mt-1 text-xs text-gray-500">
+                <div className="flex gap-4 mt-1 text-xs text-muted-foreground">
                   {t.seo_score && <span>SEO {t.seo_score}/10</span>}
                   {t.ctr_score && <span>CTR {t.ctr_score}/10</span>}
                 </div>
-                {t.rationale && <p className="text-xs text-gray-500 mt-1">{t.rationale}</p>}
+                {t.rationale && <p className="text-xs text-muted-foreground mt-1">{t.rationale}</p>}
               </div>
             ))}
           </div>
@@ -258,10 +261,10 @@ export function VideoConceptCard({ concept }: Props) {
         >
           <div className="space-y-3">
             {outline.map((section, i) => (
-              <div key={`${section.timestamp}-${i}`} className="pl-3 border-l-2 border-gray-200">
+              <div key={`${section.timestamp}-${i}`} className="pl-3 border-l-2 border-border">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-xs text-gray-400 shrink-0">{section.timestamp}</span>
-                  <p className="text-sm font-medium text-gray-800 flex-1">{section.section}</p>
+                  <span className="text-xs text-muted-foreground/60 shrink-0">{section.timestamp}</span>
+                  <p className="text-sm font-medium text-foreground flex-1">{section.section}</p>
                   <CopyButton
                     text={[section.section, ...section.talking_points].join('\n')}
                     label="Copy section"
@@ -270,15 +273,15 @@ export function VideoConceptCard({ concept }: Props) {
                 {section.talking_points.length > 0 && (
                   <ul className="mt-1 space-y-0.5">
                     {section.talking_points.map((point, j) => (
-                      <li key={`${section.timestamp}-tp-${j}`} className="flex items-start gap-1.5 text-xs text-gray-600">
-                        <span className="mt-1.5 w-1 h-1 rounded-full bg-gray-300 shrink-0" />
+                      <li key={`${section.timestamp}-tp-${j}`} className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                        <span className="mt-1.5 w-1 h-1 rounded-full bg-muted-foreground/40 shrink-0" />
                         {point}
                       </li>
                     ))}
                   </ul>
                 )}
                 {section.retention_purpose && (
-                  <p className="text-xs text-gray-400 italic mt-1">{section.retention_purpose}</p>
+                  <p className="text-xs text-muted-foreground/60 italic mt-1">{section.retention_purpose}</p>
                 )}
               </div>
             ))}
@@ -304,16 +307,16 @@ export function VideoConceptCard({ concept }: Props) {
       )}
 
       {cta && (
-        <div className="border-t border-gray-100 pt-4">
-          <p className="text-xs font-medium text-gray-500 mb-2">Call to action</p>
+        <div className="border-t border-border/50 pt-4">
+          <p className="text-xs font-medium text-muted-foreground mb-2">Call to action</p>
           <div className="space-y-2">
             <div className="flex items-start gap-2">
-              <span className="shrink-0 text-xs font-medium text-gray-400 w-16 pt-0.5">Primary</span>
-              <p className="text-sm text-gray-800">{cta.primary}</p>
+              <span className="shrink-0 text-xs font-medium text-muted-foreground/60 w-16 pt-0.5">Primary</span>
+              <p className="text-sm text-foreground/80">{cta.primary}</p>
             </div>
             <div className="flex items-start gap-2">
-              <span className="shrink-0 text-xs font-medium text-gray-400 w-16 pt-0.5">Secondary</span>
-              <p className="text-sm text-gray-700">{cta.secondary}</p>
+              <span className="shrink-0 text-xs font-medium text-muted-foreground/60 w-16 pt-0.5">Secondary</span>
+              <p className="text-sm text-foreground/80">{cta.secondary}</p>
             </div>
           </div>
         </div>
