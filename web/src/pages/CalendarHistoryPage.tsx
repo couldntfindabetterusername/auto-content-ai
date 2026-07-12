@@ -59,10 +59,10 @@ export function CalendarHistoryPage() {
   const totalPages = data ? Math.ceil(data.total / pageSize) : 1;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10 text-left">
+    <div className="max-w-4xl mx-auto px-4 py-10">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <p className="text-2xl font-bold text-foreground">Your Calendars</p>
+          <h1 className="text-2xl font-bold text-foreground">Your Calendars</h1>
           <p className="text-sm text-muted-foreground mt-1">All your past and in-progress content calendars.</p>
         </div>
         <button

@@ -615,9 +615,9 @@ export function CalendarResultPage() {
   if (!calendar) return null;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10 text-left">
+    <div className="max-w-3xl mx-auto px-4 py-10">
       <div className="mb-6">
-        <p className="text-2xl font-bold text-foreground">Your Content Calendar</p>
+        <h1 className="text-2xl font-bold text-foreground">Your Content Calendar</h1>
         {calendar.qualityScore && (
           <p className="text-sm text-muted-foreground mt-1">
             Quality score: {Math.round(Number(calendar.qualityScore) * 10) / 10}/10
@@ -628,7 +628,7 @@ export function CalendarResultPage() {
 
       {calendar.videoConcepts && calendar.videoConcepts.length > 0 && (
         <div className="mt-8">
-          <p className="text-xl font-bold text-foreground mb-4">Video Concepts</p>
+          <h2 className="text-xl font-bold text-foreground mb-4">Video Concepts</h2>
           <div className="space-y-6">
             {calendar.videoConcepts.map((concept) => (
               <VideoConceptCard key={concept.id} concept={concept} />
@@ -639,7 +639,7 @@ export function CalendarResultPage() {
 
       {calendar.id && (
         <div className="mt-10 pt-6 border-t border-border">
-          <p className="text-sm font-medium text-foreground/80 mb-3">Export</p>
+          <h3 className="text-sm font-medium text-foreground/80 mb-3">Export</h3>
           <div className="flex flex-wrap gap-3">
             <MarkdownExportButton calendarId={calendar.id} />
             <PdfExportButton calendarId={calendar.id} />
