@@ -38,71 +38,77 @@ export class ContentCalendarService {
       seoPackages: input.seoPackages,
     });
 
-    const [calendarRow] = await this.db
-      .insert(contentCalendars)
-      .values({
-        job_id: input.jobId,
-        strategy_summary: input.channelAnalysis.summary,
-        channel_analysis: input.channelAnalysis,
-        trend_analysis: input.trendAnalysis,
-        topic_selection_rationale: rationale,
-        final_markdown: finalMarkdown,
-        quality_score: input.qaResult != null ? String(input.qaResult.quality_score) : null,
-      })
-      .returning({ id: contentCalendars.id });
-
-    const calendarId: string = calendarRow.id;
-
-    for (let i = 0; i < input.videoConcepts.length; i++) {
-      const concept = input.videoConcepts[i];
-      const seo = input.seoPackages[i];
-
-      const [conceptRow] = await this.db
-        .insert(videoConceptsTable)
+    return await this.db.transaction(async (tx: any) => {
+      const [calendarRow] = await tx
+        .insert(contentCalendars)
         .values({
-          calendar_id: calendarId,
-          position: i + 1,
-          topic: concept.topic,
-          recommended_title: seo?.recommended_title ?? null,
-          hook: concept.hook.script,
-          outline_json: concept.outline,
-          retention_tactics: concept.retention_hooks,
-          cta_json: concept.cta,
-          seo_description: seo?.description ?? null,
-          thumbnail_json: seo?.thumbnail ?? null,
+          job_id: input.jobId,
+          strategy_summary: input.channelAnalysis.summary,
+          channel_analysis: input.channelAnalysis,
+          trend_analysis: input.trendAnalysis,
+          topic_selection_rationale: rationale,
+          final_markdown: finalMarkdown,
+          quality_score: input.qaResult != null ? String(input.qaResult.quality_score) : null,
         })
-        .returning({ id: videoConceptsTable.id });
+        .returning({ id: contentCalendars.id });
 
-      const conceptId: string = conceptRow.id;
+      const calendarId: string = calendarRow.id;
 
-      if (seo) {
-        for (const opt of seo.titles) {
-          await this.db.insert(titleOptionsTable).values({
-            video_concept_id: conceptId,
-            title: opt.title,
-            seo_score: String(opt.seo_score),
-            ctr_score: String(opt.ctr_score),
-            rationale: opt.rationale,
-            is_recommended: opt.title === seo.recommended_title,
-          });
-        }
+      for (let i = 0; i < input.videoConcepts.length; i++) {
+        const concept = input.videoConcepts[i];
+        const seo = input.seoPackages[i];
 
-        const keywords = [
-          ...seo.primary_keywords.map((k) => ({ keyword: k, keyword_type: 'primary' as const })),
-          ...seo.long_tail_keywords.map((k) => ({ keyword: k, keyword_type: 'long_tail' as const })),
-          ...seo.tags.map((k) => ({ keyword: k, keyword_type: 'tag' as const })),
-        ];
+        const [conceptRow] = await tx
+          .insert(videoConceptsTable)
+          .values({
+            calendar_id: calendarId,
+            position: i + 1,
+            topic: concept.topic,
+            recommended_title: seo?.recommended_title ?? null,
+            hook: concept.hook.script,
+            outline_json: concept.outline,
+            retention_tactics: concept.retention_hooks,
+            cta_json: concept.cta,
+            seo_description: seo?.description ?? null,
+            thumbnail_json: seo?.thumbnail ?? null,
+          })
+          .returning({ id: videoConceptsTable.id });
 
-        for (const kw of keywords) {
-          await this.db.insert(seoKeywordsTable).values({
-            video_concept_id: conceptId,
-            keyword: kw.keyword,
-            keyword_type: kw.keyword_type,
-          });
+        const conceptId: string = conceptRow.id;
+
+        if (seo) {
+          if (seo.titles.length > 0) {
+            await tx.insert(titleOptionsTable).values(
+              seo.titles.map((opt) => ({
+                video_concept_id: conceptId,
+                title: opt.title,
+                seo_score: String(opt.seo_score),
+                ctr_score: String(opt.ctr_score),
+                rationale: opt.rationale,
+                is_recommended: opt.title === seo.recommended_title,
+              })),
+            );
+          }
+
+          const keywords = [
+            ...seo.primary_keywords.map((k) => ({ keyword: k, keyword_type: 'primary' as const })),
+            ...seo.long_tail_keywords.map((k) => ({ keyword: k, keyword_type: 'long_tail' as const })),
+            ...seo.tags.map((k) => ({ keyword: k, keyword_type: 'tag' as const })),
+          ];
+
+          if (keywords.length > 0) {
+            await tx.insert(seoKeywordsTable).values(
+              keywords.map((kw) => ({
+                video_concept_id: conceptId,
+                keyword: kw.keyword,
+                keyword_type: kw.keyword_type,
+              })),
+            );
+          }
         }
       }
-    }
 
-    return calendarId;
+      return calendarId;
+    });
   }
 }
