@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getCalendar } from '../api/contentCalendarClient';
 import { CalendarSummaryCard } from '../components/CalendarSummaryCard';
+import { MarkdownExportButton } from '../components/MarkdownExportButton';
 import { VideoConceptCard } from '../components/VideoConceptCard';
 import type { CalendarResponse } from '../types/calendar';
 
@@ -629,6 +630,13 @@ export function CalendarResultPage() {
               <VideoConceptCard key={concept.id} concept={concept} />
             ))}
           </div>
+        </div>
+      )}
+
+      {calendar.id && (
+        <div className="mt-10 pt-6 border-t border-gray-200">
+          <p className="text-sm font-medium text-gray-700 mb-3">Export</p>
+          <MarkdownExportButton calendarId={calendar.id} />
         </div>
       )}
     </div>

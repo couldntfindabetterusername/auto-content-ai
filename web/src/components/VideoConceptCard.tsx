@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { VideoConcept } from '../types/calendar';
+import { CopyButton } from './CopyButton';
 import { SeoPackagePanel } from './SeoPackagePanel';
 
 interface OutlineSection {
@@ -70,6 +71,26 @@ interface Props {
   concept: VideoConcept;
 }
 
+function buildConceptText(concept: VideoConcept): string {
+  const outline = asOutline(concept.outline_json);
+  const hooks = asRetentionHooks(concept.retention_tactics);
+  const cta = asCta(concept.cta_json);
+  const lines: string[] = [
+    concept.recommended_title ?? concept.topic,
+    '',
+    concept.hook ?? '',
+    '',
+    'Outline:',
+    ...outline.map((s) => `${s.timestamp} ${s.section}\n${s.talking_points.map((p) => `  - ${p}`).join('\n')}`),
+    '',
+    'Retention hooks:',
+    ...hooks.map((h) => `${h.timestamp} "${h.line}"`),
+    '',
+    cta ? `CTA: ${cta.primary}` : '',
+  ];
+  return lines.join('\n').trim();
+}
+
 export function VideoConceptCard({ concept }: Props) {
   const outline = asOutline(concept.outline_json);
   const retentionHooks = asRetentionHooks(concept.retention_tactics);
@@ -85,9 +106,12 @@ export function VideoConceptCard({ concept }: Props) {
           {concept.position}
         </span>
         <div className="flex-1 min-w-0">
-          <p className="text-lg font-semibold text-gray-900 leading-snug">
-            {concept.recommended_title ?? concept.topic}
-          </p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-lg font-semibold text-gray-900 leading-snug flex-1">
+              {concept.recommended_title ?? concept.topic}
+            </p>
+            <CopyButton text={buildConceptText(concept)} label="Copy full concept" />
+          </div>
           <p className="text-sm text-gray-500 mt-0.5">{concept.topic}</p>
           <div className="flex flex-wrap gap-2 mt-2">
             {concept.content_type && (
@@ -114,7 +138,10 @@ export function VideoConceptCard({ concept }: Props) {
 
       {concept.hook && (
         <div className="p-3 bg-amber-50 border border-amber-100 rounded-lg">
-          <p className="text-xs font-medium text-amber-700 mb-1">Hook</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs font-medium text-amber-700">Hook</p>
+            <CopyButton text={concept.hook} label="Copy hook" />
+          </div>
           <p className="text-sm text-amber-900 leading-relaxed">{concept.hook}</p>
         </div>
       )}
@@ -133,7 +160,10 @@ export function VideoConceptCard({ concept }: Props) {
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-medium text-green-900 flex-1">{recommendedTitle.title}</p>
-                  <span className="shrink-0 px-1.5 py-0.5 bg-green-200 text-green-800 text-xs rounded">recommended</span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <CopyButton text={recommendedTitle.title} label="Copy title" />
+                    <span className="px-1.5 py-0.5 bg-green-200 text-green-800 text-xs rounded">recommended</span>
+                  </div>
                 </div>
                 <div className="flex gap-4 mt-2 text-xs text-green-700">
                   {recommendedTitle.seo_score && <span>SEO {recommendedTitle.seo_score}/10</span>}
@@ -146,7 +176,10 @@ export function VideoConceptCard({ concept }: Props) {
             )}
             {otherTitles.map((t) => (
               <div key={t.id} className="p-3 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-800">{t.title}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm text-gray-800 flex-1">{t.title}</p>
+                  <CopyButton text={t.title} label="Copy title" />
+                </div>
                 <div className="flex gap-4 mt-1 text-xs text-gray-500">
                   {t.seo_score && <span>SEO {t.seo_score}/10</span>}
                   {t.ctr_score && <span>CTR {t.ctr_score}/10</span>}
@@ -165,7 +198,11 @@ export function VideoConceptCard({ concept }: Props) {
               <div key={`${section.timestamp}-${i}`} className="pl-3 border-l-2 border-gray-200">
                 <div className="flex items-baseline gap-2">
                   <span className="text-xs text-gray-400 shrink-0">{section.timestamp}</span>
-                  <p className="text-sm font-medium text-gray-800">{section.section}</p>
+                  <p className="text-sm font-medium text-gray-800 flex-1">{section.section}</p>
+                  <CopyButton
+                    text={[section.section, ...section.talking_points].join('\n')}
+                    label="Copy section"
+                  />
                 </div>
                 {section.talking_points.length > 0 && (
                   <ul className="mt-1 space-y-0.5">
@@ -191,9 +228,10 @@ export function VideoConceptCard({ concept }: Props) {
           <div className="space-y-2">
             {retentionHooks.map((hook, i) => (
               <div key={`${hook.timestamp}-${i}`} className="p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xs text-blue-400 shrink-0">{hook.timestamp}</span>
-                  <p className="text-sm text-blue-900 font-medium">{hook.line}</p>
+                <div className="flex items-start gap-2">
+                  <span className="text-xs text-blue-400 shrink-0 pt-0.5">{hook.timestamp}</span>
+                  <p className="text-sm text-blue-900 font-medium flex-1">{hook.line}</p>
+                  <CopyButton text={hook.line} label="Copy hook" />
                 </div>
                 {hook.reason && <p className="text-xs text-blue-600 mt-1">{hook.reason}</p>}
               </div>
