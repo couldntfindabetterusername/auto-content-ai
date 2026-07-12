@@ -5,10 +5,11 @@ import { AgentRunnerService } from './agent-runner.service';
 import { ChannelAnalyzerAgent } from './channel-analyzer.agent';
 import { TrendScoutAgent } from './trend-scout.agent';
 import { TopicStrategistAgent } from './topic-strategist.agent';
+import { OutlineGeneratorAgent } from './outline-generator.agent';
 
 @Module({
   imports: [LlmModule, DbModule],
-  providers: [AgentRunnerService, ChannelAnalyzerAgent, TrendScoutAgent, TopicStrategistAgent],
-  exports: [AgentRunnerService, ChannelAnalyzerAgent, TrendScoutAgent, TopicStrategistAgent],
+  providers: [AgentRunnerService, ChannelAnalyzerAgent, TrendScoutAgent, TopicStrategistAgent, OutlineGeneratorAgent],
+  exports: [AgentRunnerService, ChannelAnalyzerAgent, TrendScoutAgent, TopicStrategistAgent, OutlineGeneratorAgent],
 })
 export class AgentsModule {}
