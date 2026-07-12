@@ -42,6 +42,7 @@ export interface PipelineDeps {
 type PublishFn = (
   step: string,
   status: 'running' | 'done' | 'failed',
+  progress: number,
   error?: string,
 ) => Promise<void>;
 
@@ -74,15 +75,15 @@ export async function runPipeline(
     fn: () => Promise<T>,
   ): Promise<T> => {
     await setProgress(percent, name);
-    await publish(name, 'running');
+    await publish(name, 'running', percent);
     try {
       const result = await fn();
-      await publish(name, 'done');
+      await publish(name, 'done', percent);
       return result;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       await failJob(msg);
-      await publish(name, 'failed', msg);
+      await publish(name, 'failed', percent, msg);
       throw err;
     }
   };
@@ -163,7 +164,7 @@ export async function runPipeline(
   // Stage 8: SEO Optimizer x4 parallel — 75% (partial failure allowed)
   await costGuard();
   await setProgress(75, 'optimizing_seo');
-  await publish('optimizing_seo', 'running');
+  await publish('optimizing_seo', 'running', 75);
 
   const successfulConcepts: VideoConcept[] = [];
   const successfulSeoPackages: SeoPackage[] = [];
@@ -188,11 +189,11 @@ export async function runPipeline(
   if (successfulConcepts.length === 0) {
     const msg = 'All SEO optimization tasks failed';
     await failJob(msg);
-    await publish('optimizing_seo', 'failed', msg);
+    await publish('optimizing_seo', 'failed', 75, msg);
     throw new Error(msg);
   }
 
-  await publish('optimizing_seo', 'done');
+  await publish('optimizing_seo', 'done', 75);
   const isPartial = successfulConcepts.length < videoConcepts.length;
 
   // Stage 9: Final QA — 90% (skipped on partial failure, non-fatal on error)
@@ -200,7 +201,7 @@ export async function runPipeline(
   let qaResult: QaResult | undefined;
 
   if (!isPartial) {
-    await publish('qa_check', 'running');
+    await publish('qa_check', 'running', 90);
     try {
       const result = await deps.finalQaAgent.runQa(
         channelAnalysis,
@@ -210,11 +211,11 @@ export async function runPipeline(
         jobId,
       );
       qaResult = result.data;
-      await publish('qa_check', 'done');
+      await publish('qa_check', 'done', 90);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.warn(`[pipeline] QA failed (non-fatal): ${msg}`);
-      await publish('qa_check', 'failed', msg);
+      await publish('qa_check', 'failed', 90, msg);
     }
   }
 
@@ -232,7 +233,7 @@ export async function runPipeline(
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     await failJob(msg);
-    await publish('save_results', 'failed', msg);
+    await publish('save_results', 'failed', 95, msg);
     throw err;
   }
 
@@ -243,5 +244,5 @@ export async function runPipeline(
     .set({ status: finalStatus, completed_at: new Date() })
     .where(eq(contentCalendarJobs.id, jobId));
 
-  await publish('pipeline_complete', 'done');
+  await publish('pipeline_complete', 'done', 100);
 }

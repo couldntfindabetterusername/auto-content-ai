@@ -1,8 +1,9 @@
 export interface JobProgressEvent {
+  type?: 'completed' | 'failed';
   step: string;
+  status: 'running' | 'done' | 'failed';
   progress: number;
-  message: string;
-  type?: 'progress' | 'completed' | 'failed';
+  error?: string;
 }
 
 export interface AgentStage {

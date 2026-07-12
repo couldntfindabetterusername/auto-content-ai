@@ -69,22 +69,21 @@ import { runPipeline } from './pipeline';
     jobId: string,
     step: string,
     status: 'running' | 'done' | 'failed',
+    progress: number,
     error?: string,
   ): Promise<void> {
     try {
       await publisher.publish(
         `job:${jobId}:progress`,
         JSON.stringify({
-          jobId,
-          agentName: step,
+          step,
           status,
-          agentRunId: '',
-          timestamp: new Date().toISOString(),
+          progress,
           ...(error ? { error } : {}),
         }),
       );
     } catch {
-      // non-fatal — never break execution for pub/sub failures
+      // non-fatal
     }
   }
 
@@ -103,23 +102,29 @@ import { runPipeline } from './pipeline';
         .set({ status: 'running', current_step: 'starting', started_at: new Date() })
         .where(eq(contentCalendarJobs.id, jobId));
 
-      await runPipeline(
-        { jobId, channelUrl, niche, preferences },
-        {
-          db,
-          inputValidator,
-          channelDataCollector,
-          trendDataCollector,
-          channelAnalyzerAgent,
-          trendScoutAgent,
-          topicStrategistAgent,
-          outlineGeneratorAgent,
-          seoOptimizerAgent,
-          finalQaAgent,
-          contentCalendarService,
-        },
-        (step, status, error) => publishProgress(jobId, step, status, error),
-      );
+      try {
+        await runPipeline(
+          { jobId, channelUrl, niche, preferences },
+          {
+            db,
+            inputValidator,
+            channelDataCollector,
+            trendDataCollector,
+            channelAnalyzerAgent,
+            trendScoutAgent,
+            topicStrategistAgent,
+            outlineGeneratorAgent,
+            seoOptimizerAgent,
+            finalQaAgent,
+            contentCalendarService,
+          },
+          (step, status, progress, error) => publishProgress(jobId, step, status, progress, error),
+        );
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        await publishProgress(jobId, 'pipeline_complete', 'failed', 100, msg);
+        throw err;
+      }
     },
     {
       connection: {

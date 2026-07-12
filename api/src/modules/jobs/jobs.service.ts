@@ -58,12 +58,24 @@ export class JobsService {
           for await (const msg of messages) {
             if (subscriber.closed) break;
             try {
-              const data = JSON.parse(msg) as { step: string; progress: number; message: string };
-              subscriber.next({ data });
-              if (data.step === 'completed' || data.step === 'failed') {
+              const data = JSON.parse(msg) as {
+                step: string;
+                status: 'running' | 'done' | 'failed';
+                progress: number;
+                error?: string;
+              };
+
+              if (data.step === 'pipeline_complete') {
+                if (data.status === 'done') {
+                  subscriber.next({ data, type: 'completed' });
+                } else {
+                  subscriber.next({ data, type: 'failed' });
+                }
                 subscriber.complete();
                 break;
               }
+
+              subscriber.next({ data });
             } catch {
               // skip malformed message
             }

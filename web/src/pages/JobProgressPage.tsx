@@ -5,22 +5,23 @@ import { subscribeToJobEvents } from '../api/jobEventsClient';
 import type { AgentStage, JobProgressEvent } from '../types/job';
 
 const STEP_TO_AGENT: Record<string, string> = {
-  validating_input: 'Channel Analyzer',
-  fetching_channel: 'Channel Analyzer',
-  analyzing_channel: 'Channel Analyzer',
-  researching_trends: 'Trend Scout',
-  selecting_topics: 'Script Generator',
+  validating_input:    'Channel Analyzer',
+  fetching_channel:    'Channel Analyzer',
+  analyzing_channel:   'Channel Analyzer',
+  researching_trends:  'Trend Scout',
+  scouting_trends:     'Trend Scout',
+  selecting_topics:    'Script Generator',
   generating_outlines: 'Script Generator',
-  optimizing_seo: 'SEO Optimizer',
-  reviewing_quality: 'SEO Optimizer',
-  rendering_output: 'SEO Optimizer',
+  optimizing_seo:      'SEO Optimizer',
+  qa_check:            'SEO Optimizer',
+  pipeline_complete:   'SEO Optimizer',
 };
 
 const INITIAL_STAGES: AgentStage[] = [
   { name: 'Channel Analyzer', status: 'pending', steps: ['validating_input', 'fetching_channel', 'analyzing_channel'] },
-  { name: 'Trend Scout',      status: 'pending', steps: ['researching_trends'] },
+  { name: 'Trend Scout',      status: 'pending', steps: ['researching_trends', 'scouting_trends'] },
   { name: 'Script Generator', status: 'pending', steps: ['selecting_topics', 'generating_outlines'] },
-  { name: 'SEO Optimizer',    status: 'pending', steps: ['optimizing_seo', 'reviewing_quality', 'rendering_output'] },
+  { name: 'SEO Optimizer',    status: 'pending', steps: ['optimizing_seo', 'qa_check'] },
 ];
 
 function applyStepToStages(prev: AgentStage[], activeAgent: string): AgentStage[] {
@@ -50,7 +51,7 @@ export function JobProgressPage() {
       }
 
       if (event.type === 'failed') {
-        setError(event.message || 'Job failed');
+        setError(event.error || 'Job failed');
         setStages(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'failed' } : s));
         return;
       }
