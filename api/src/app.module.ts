@@ -8,6 +8,7 @@ import { HealthController } from './health/health.controller';
 import { DbModule } from './db/db.module';
 import { QueueModule } from './queue/queue.module';
 import { AuthModule } from './auth/auth.module';
+import { ContentCalendarModule } from './content-calendar/content-calendar.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AuthModule } from './auth/auth.module';
     DbModule,
     QueueModule,
     AuthModule,
+    ContentCalendarModule,
   ],
   controllers: [HealthController],
 })

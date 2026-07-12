@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { sql } from 'drizzle-orm';
 import Redis from 'ioredis';
@@ -7,6 +8,8 @@ import './workers/content-calendar.worker';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const port = parseInt(process.env.PORT || '3000', 10);
+
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
   app.enableCors({
     origin: 'http://localhost:5173',

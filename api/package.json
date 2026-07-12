@@ -20,6 +20,8 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^10.2.10",
     "bullmq": "^5.79.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
     "connect-redis": "^9.0.0",
     "dotenv": "^16.3.1",
     "drizzle-orm": "^0.45.2",
