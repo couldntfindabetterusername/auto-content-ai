@@ -1,19 +1,61 @@
-import { createBrowserRouter } from 'react-router-dom';
-import App from './App';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
+import { AppLayout } from './layouts/AppLayout';
+import { LandingPage } from './pages/LandingPage';
 import { JobProgressPage } from './pages/JobProgressPage';
 import { NewCalendarPage } from './pages/NewCalendarPage';
+import { useAuth } from './hooks/useAuth';
+
+function ProtectedRoute() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
+}
 
 export const router = createBrowserRouter([
   {
-    path: '/',
-    element: <App />,
-  },
-  {
-    path: '/new',
-    element: <NewCalendarPage />,
-  },
-  {
-    path: '/jobs/:jobId',
-    element: <JobProgressPage />,
+    element: <AppLayout />,
+    children: [
+      {
+        path: '/',
+        element: <LandingPage />,
+      },
+      {
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: '/new',
+            element: <NewCalendarPage />,
+          },
+          {
+            path: '/jobs/:jobId',
+            element: <JobProgressPage />,
+          },
+          {
+            path: '/calendar/:id',
+            element: <div className="p-8 text-center text-gray-500">Calendar result page — coming soon</div>,
+          },
+          {
+            path: '/history',
+            element: <div className="p-8 text-center text-gray-500">History page — coming soon</div>,
+          },
+        ],
+      },
+      {
+        path: '*',
+        element: <Navigate to="/" replace />,
+      },
+    ],
   },
 ]);
