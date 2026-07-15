@@ -1,48 +1,79 @@
-# Stage 1: Production dependencies
-FROM node:20-slim AS deps
-WORKDIR /app
-COPY package.json package-lock.json ./
-COPY api/package.json ./api/
-COPY web/package.json ./web/
-RUN npm ci --omit=dev
-
-# Stage 2: All dependencies (includes devDependencies for build)
-FROM node:20-slim AS build-deps
-WORKDIR /app
-COPY package.json package-lock.json ./
-COPY api/package.json ./api/
-COPY web/package.json ./web/
-RUN npm ci
-
-# Stage 3: Build
+# ─── Stage 1: builder ───────────────────────────────────────────────────────
+# Installs ALL dependencies (devDeps included) and builds the api workspace.
+# Running npm ci and npm run build in the SAME stage guarantees that
+# @nestjs/cli is on PATH and npm's workspace link state is intact.
 FROM node:20-slim AS builder
 WORKDIR /app
-COPY --from=build-deps /app/node_modules ./node_modules
-COPY package.json tsconfig.base.json ./
+
+# Copy workspace manifests first so npm understands the workspace topology.
+# web/package.json is required even though we don't build web here — npm ci
+# refuses to install if a declared workspace directory is missing its manifest.
+COPY package.json package-lock.json tsconfig.base.json ./
 COPY api/package.json api/tsconfig.json api/nest-cli.json ./api/
-COPY api/src ./api/src
-COPY api/prompts ./api/prompts
+COPY web/package.json ./web/
+
+# Install all deps including devDeps (@nestjs/cli lives here).
+# PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD prevents the playwright postinstall hook
+# from downloading Chromium — the runtime image uses the OS-packaged binary.
+RUN PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci
+
+# Copy source after install so that dep-only changes don't bust the source layer.
+COPY api ./api
+
+# Build api workspace.
+# nest-cli.json assets config automatically copies:
+#   src/db/migrations/**/*          → dist/db/migrations/
+#   src/modules/export/**/*.html    → dist/modules/export/pdf-template.html
 RUN NODE_OPTIONS=--max-old-space-size=4096 npm run build -w api
 
-# Stage 4: Production runner
+# ─── Stage 2: prod-deps ─────────────────────────────────────────────────────
+# Produces a clean production node_modules with no devDeps.
+# Kept as a separate stage so the runtime image does not carry build tooling.
+FROM node:20-slim AS prod-deps
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY api/package.json ./api/
+COPY web/package.json ./web/
+
+RUN PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --omit=dev
+
+
+# ─── Stage 3: runner ────────────────────────────────────────────────────────
 FROM node:20-slim AS runner
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-# System chromium (PDF export via Playwright) + curl (health checks)
-# Using system chromium avoids network download during build
+
+# System Chromium for Playwright (PDF export).
+# curl is used for health checks on Render.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     curl \
     && rm -rf /var/lib/apt/lists/*
+
+ENV NODE_ENV=production
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
+# Production node_modules: no typescript, no nest-cli, no jest.
+COPY --from=prod-deps /app/node_modules ./node_modules
+
+# Compiled backend.
+# Includes dist/db/migrations/ and dist/modules/export/pdf-template.html
+# because nest build copied them via nest-cli.json assets config.
 COPY --from=builder /app/api/dist ./dist
-COPY --from=builder /app/api/prompts ./prompts
-COPY package.json ./
+
+# Prompt templates.
+# PromptLoader resolves prompts via process.cwd() + '/prompts' (prompt-loader.ts:15).
+# WORKDIR is /app so this must be at /app/prompts.
+COPY api/prompts ./prompts
+
+# Startup script — starts node dist/main and node dist/workers/worker.js.
 COPY api/scripts/start-combined.sh ./scripts/start-combined.sh
 RUN chmod +x ./scripts/start-combined.sh
-ENV NODE_ENV=production
+
 EXPOSE 3000
-# Default: run API + worker together (free deployment, single container)
-# For worker-only container (VPS/paid PaaS), override CMD: ["node", "dist/workers/worker.js"]
-# For API-only container, override CMD: ["node", "dist/main"]
+
+# Override CMD to run API-only or worker-only in separate containers:
+#   API only:    ["node", "dist/main"]
+#   Worker only: ["node", "dist/workers/worker.js"]
 CMD ["/bin/bash", "./scripts/start-combined.sh"]
