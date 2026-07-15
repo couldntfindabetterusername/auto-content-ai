@@ -44,7 +44,7 @@ import { runPipeline } from './pipeline';
   youtubeService.onModuleInit();
 
   const metricsService = new MetricsService();
-  const trendsService = new TrendsService(envConfig as any, db);
+  const trendsService = new TrendsService(db);
   trendsService.onModuleInit();
 
   const geminiProvider = new GeminiProvider(envConfig as any);

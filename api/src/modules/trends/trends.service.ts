@@ -1,5 +1,4 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { createHash } from 'crypto';
 import { externalApiCalls } from '../../db/schema';
@@ -35,7 +34,6 @@ export class TrendsService implements OnModuleInit {
   private redis!: Redis;
 
   constructor(
-    private readonly config: ConfigService,
     @Inject('DB') private readonly db: any,
   ) {}
 
