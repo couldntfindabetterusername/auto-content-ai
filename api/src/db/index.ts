@@ -13,3 +13,8 @@ export async function createDb() {
   const client = postgres(process.env.DATABASE_URL!);
   return drizzle(client, { schema });
 }
+
+export function connectDb() {
+  const client = postgres(process.env.DATABASE_URL!);
+  return drizzle(client, { schema });
+}

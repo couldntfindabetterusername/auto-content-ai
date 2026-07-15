@@ -3,7 +3,7 @@ import { Worker } from 'bullmq';
 import Redis from 'ioredis';
 import { getRedisOptions } from '../shared/redis-config';
 import { eq } from 'drizzle-orm';
-import { createDb } from '../db/index';
+import { connectDb } from '../db/index';
 import { contentCalendarJobs } from '../db/schema';
 import { YoutubeService } from '../modules/youtube/youtube.service';
 import { MetricsService } from '../modules/youtube/metrics.service';
@@ -25,7 +25,7 @@ import { CalendarPersistenceService } from '../modules/content-calendar/calendar
 import { runPipeline } from './pipeline';
 
 (async () => {
-  const db = await createDb();
+  const db = connectDb();
 
   const publisher = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
 
