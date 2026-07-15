@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AdminJobTable } from '../components/AdminJobTable';
 import type { AdminJob } from '../components/AdminJobTable';
+import { apiUrl } from '../api/apiUrl';
 
 interface AdminStats {
   total_jobs: number;
@@ -19,7 +20,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
 }
 
 async function fetchAdmin<T>(path: string): Promise<T> {
-  const res = await fetch(path, { credentials: 'include' });
+  const res = await fetch(apiUrl(path), { credentials: 'include' });
   if (res.status === 403) throw new Error('403');
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

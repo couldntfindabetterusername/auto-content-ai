@@ -2,7 +2,7 @@ import { Moon, Sun } from 'lucide-react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useDarkMode } from '../hooks/useDarkMode';
-import { logout } from '../api/auth';
+import { logout, getLoginUrl } from '../api/auth';
 
 export function AppLayout() {
   const { user, loading } = useAuth();
@@ -65,7 +65,7 @@ export function AppLayout() {
             )}
             {!loading && !user && (
               <a
-                href="/api/auth/google"
+                href={getLoginUrl()}
                 className="text-sm font-medium bg-primary text-primary-foreground px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors"
               >
                 Sign in

@@ -1,4 +1,5 @@
 import type { CalendarResponse, CreateCalendarRequest, CreateCalendarResponse } from '../types/calendar';
+import { apiUrl } from './apiUrl';
 
 export interface CalendarHistoryItem {
   id: string;
@@ -23,7 +24,7 @@ export async function listCalendars(
   pageSize = 20,
 ): Promise<CalendarHistoryResponse> {
   const res = await fetch(
-    `/api/content-calendars?page=${page}&pageSize=${pageSize}`,
+    apiUrl(`/api/content-calendars?page=${page}&pageSize=${pageSize}`),
     { credentials: 'include' },
   );
 
@@ -38,7 +39,7 @@ export async function listCalendars(
 export async function createContentCalendar(
   request: CreateCalendarRequest,
 ): Promise<CreateCalendarResponse> {
-  const res = await fetch('/api/content-calendars', {
+  const res = await fetch(apiUrl('/api/content-calendars'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
@@ -58,7 +59,7 @@ export async function rateCalendar(
   rating: number,
   feedback?: string,
 ): Promise<void> {
-  const res = await fetch(`/api/content-calendars/${id}/rate`, {
+  const res = await fetch(apiUrl(`/api/content-calendars/${id}/rate`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ rating, feedback }),
@@ -72,7 +73,7 @@ export async function rateCalendar(
 }
 
 export async function getCalendar(id: string): Promise<CalendarResponse> {
-  const res = await fetch(`/api/content-calendars/${id}`, {
+  const res = await fetch(apiUrl(`/api/content-calendars/${id}`), {
     credentials: 'include',
   });
 

@@ -1,3 +1,5 @@
+import { apiUrl } from './apiUrl';
+
 export interface User {
   id: string;
   email: string;
@@ -7,16 +9,16 @@ export interface User {
 }
 
 export async function getMe(): Promise<User | null> {
-  const res = await fetch('/api/auth/me', { credentials: 'include' });
+  const res = await fetch(apiUrl('/api/auth/me'), { credentials: 'include' });
   if (res.status === 401) return null;
   if (!res.ok) throw new Error('Failed to fetch user');
   return res.json();
 }
 
 export function getLoginUrl(): string {
-  return '/api/auth/google';
+  return apiUrl('/api/auth/google');
 }
 
 export async function logout(): Promise<void> {
-  await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+  await fetch(apiUrl('/api/auth/logout'), { method: 'POST', credentials: 'include' });
 }

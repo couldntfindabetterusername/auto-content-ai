@@ -1,0 +1,35 @@
+# Free deployment compose file.
+# Runs only the backend API container — API + worker run together in one process.
+# No local postgres, redis, worker, or web containers.
+# Requires external DATABASE_URL (Neon/Supabase) and REDIS_URL (Upstash) in .env
+#
+# Usage:
+#   docker compose -f docker-compose.free.yml up --build
+#
+# See DEPLOYMENT.md for full setup instructions.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped

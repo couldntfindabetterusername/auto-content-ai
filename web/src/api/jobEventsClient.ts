@@ -1,11 +1,13 @@
 import type { JobProgressEvent } from '../types/job';
+import { apiUrl } from './apiUrl';
 
 export function subscribeToJobEvents(
   jobId: string,
   onEvent: (event: JobProgressEvent) => void,
   onError: (error: Error) => void,
 ): () => void {
-  const source = new EventSource(`/api/jobs/${jobId}/events`);
+  // withCredentials required for cross-origin SSE (separate frontend/backend domains)
+  const source = new EventSource(apiUrl(`/api/jobs/${jobId}/events`), { withCredentials: true });
 
   const parse = (data: string, typeOverride?: JobProgressEvent['type']) => {
     try {
