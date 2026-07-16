@@ -54,6 +54,7 @@ export class AppModule implements NestModule {
     consumer
       .apply(
         session({
+          proxy: true,
           store,
           secret: (() => {
             const secret = process.env.SESSION_SECRET;
